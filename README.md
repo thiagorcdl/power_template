@@ -66,15 +66,7 @@ node -v
 npm -v
 ```
 
-### 1.4 Continue (IDE) + Continue CLI (`cn`)
-
-#### Install VS Code (if you don’t already have it)
-
-Use your preferred method. Then install Continue extension:
-
-```bash
-code --install-extension continue.continue
-```
+### 1.4 Continue
 
 Install Continue CLI:
 
@@ -192,7 +184,7 @@ chmod +x .githooks/* scripts/*.sh
 Open the repo in VS Code:
 
 ```bash
-code .
+cn --config ~/.continue/config.yaml
 ```
 
 In Continue chat, start with a design prompt. Example:
@@ -206,7 +198,7 @@ In Continue chat, start with a design prompt. Example:
 Once you decide on a stack, ask the assistant to crate an implementation plan, and to apply the template’s “Stack Evolution” rule. Example prompt:
 
 > We chose: TypeScript + Node + Express + Postgres + Vitest.  
-> Create an implementation plan, starting with a minimum skeleton of the project, ensuring components are added incrementalling and make sure to follow **Stack Evolution** rule.
+> Start implementing a minimum skeleton of the project, ensuring components are added incrementally and make sure to follow **Stack Evolution** rule.
 
 ### 4.3 Verify the scripts are now real (not scaffolds)
 
