@@ -1,0 +1,139 @@
+{
+  "lint": {
+    "typescript": {
+      "commands": [
+        "eslint . --ext .ts,.tsx",
+        "tsc --noEmit"
+      ],
+      "install": [
+        "npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin typescript"
+      ]
+    },
+    "javascript": {
+      "commands": [
+        "eslint ."
+      ],
+      "install": [
+        "npm install --save-dev eslint"
+      ]
+    },
+    "python": {
+      "commands": [
+        "ruff check .",
+        "ruff format --check .",
+        "mypy ."
+      ],
+      "install": [
+        "pip install ruff mypy"
+      ]
+    },
+    "go": {
+      "commands": [
+        "gofmt -w .",
+        "go vet ./...",
+        "golangci-lint run"
+      ],
+      "install": [
+        "go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+      ]
+    },
+    "rust": {
+      "commands": [
+        "cargo clippy -- -D warnings",
+        "cargo fmt -- --check"
+      ],
+      "install": [
+        "rustup component add clippy"
+      ]
+    },
+    "java": {
+      "commands": [
+        "mvn checkstyle:check",
+        "mvn compile"
+      ],
+      "install": [
+        "mvn install"
+      ]
+    },
+    "ruby": {
+      "commands": [
+        "rubocop",
+        "bundle exec rspec"
+      ],
+      "install": [
+        "gem install rubocop"
+      ]
+    },
+    "php": {
+      "commands": [
+        "phpcs --standard=PSR12",
+        "phpstan analyze"
+      ],
+      "install": [
+        "composer require --dev squizlabs/php_codesniffer phpstan/phpstan"
+      ]
+    }
+  },
+  "test": {
+    "typescript": {
+      "commands": [
+        "npm test"
+      ],
+      "install": [
+        "npm install --save-dev jest @types/jest ts-jest"
+      ]
+    },
+    "javascript": {
+      "commands": [
+        "npm test"
+      ],
+      "install": [
+        "npm install --save-dev jest"
+      ]
+    },
+    "python": {
+      "commands": [
+        "pytest -q"
+      ],
+      "install": [
+        "pip install pytest pytest-cov"
+      ]
+    },
+    "go": {
+      "commands": [
+        "go test ./..."
+      ],
+      "install": []
+    },
+    "rust": {
+      "commands": [
+        "cargo test"
+      ],
+      "install": []
+    },
+    "java": {
+      "commands": [
+        "mvn test"
+      ],
+      "install": [
+        "mvn install"
+      ]
+    },
+    "ruby": {
+      "commands": [
+        "bundle exec rspec"
+      ],
+      "install": [
+        "bundle install"
+      ]
+    },
+    "php": {
+      "commands": [
+        "vendor/bin/phpunit"
+      ],
+      "install": [
+        "composer require --dev phpunit/phpunit"
+      ]
+    }
+  }
+}

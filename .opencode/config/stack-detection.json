@@ -1,0 +1,129 @@
+{
+  "language_files": [
+    {
+      "pattern": "package.json",
+      "languages": ["javascript"],
+      "package_manager": "npm"
+    },
+    {
+      "pattern": "tsconfig.json",
+      "languages": ["typescript"],
+      "package_manager": "npm"
+    },
+    {
+      "pattern": "requirements.txt",
+      "languages": ["python"],
+      "package_manager": "pip"
+    },
+    {
+      "pattern": "pyproject.toml",
+      "languages": ["python"],
+      "package_manager": "poetry"
+    },
+    {
+      "pattern": "setup.py",
+      "languages": ["python"],
+      "package_manager": "pip"
+    },
+    {
+      "pattern": "go.mod",
+      "languages": ["go"],
+      "package_manager": "go"
+    },
+    {
+      "pattern": "Cargo.toml",
+      "languages": ["rust"],
+      "package_manager": "cargo"
+    },
+    {
+      "pattern": "pom.xml",
+      "languages": ["java"],
+      "package_manager": "maven"
+    },
+    {
+      "pattern": "build.gradle",
+      "languages": ["java", "kotlin"],
+      "package_manager": "gradle"
+    },
+    {
+      "pattern": "Gemfile",
+      "languages": ["ruby"],
+      "package_manager": "bundler"
+    },
+    {
+      "pattern": "composer.json",
+      "languages": ["php"],
+      "package_manager": "composer"
+    },
+    {
+      "pattern": "mix.exs",
+      "languages": ["elixir"],
+      "package_manager": "mix"
+    }
+  ],
+  "framework_patterns": {
+    "javascript": {
+      "react": "React",
+      "react-dom": "React",
+      "next": "Next.js",
+      "nuxt": "Nuxt",
+      "vue": "Vue",
+      "vue-router": "Vue",
+      "angular": "Angular",
+      "@angular/core": "Angular",
+      "svelte": "Svelte",
+      "svelte-kit": "SvelteKit",
+      "express": "Express",
+      "fastify": "Fastify",
+      "nest": "NestJS",
+      "@nestjs/core": "NestJS",
+      "koa": "Koa",
+      "hapi": "Hapi"
+    },
+    "python": {
+      "django": "Django",
+      "djangorestframework": "Django REST Framework",
+      "flask": "Flask",
+      "fastapi": "FastAPI",
+      "tornado": "Tornado",
+      "aiohttp": "aiohttp",
+      "quart": "Quart",
+      "sanic": "Sanic",
+      "starlette": "Starlette"
+    },
+    "go": {
+      "github.com/gin-gonic/gin": "Gin",
+      "github.com/labstack/echo/v4": "Echo",
+      "github.com/gofiber/fiber/v2": "Fiber",
+      "github.com/go-chi/chi/v5": "Chi",
+      "google.golang.org/grpc": "gRPC",
+      "github.com/gorilla/mux": "Mux"
+    },
+    "rust": {
+      "actix-web": "Actix Web",
+      "axum": "Axum",
+      "rocket": "Rocket",
+      "tokio": "Tokio",
+      "warp": "Warp",
+      "tide": "Tide"
+    }
+  },
+  "source_file_extensions": {
+    ".ts": "typescript",
+    ".tsx": "typescript",
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".py": "python",
+    ".go": "go",
+    ".rs": "rust",
+    ".java": "java",
+    ".kt": "kotlin",
+    ".rb": "ruby",
+    ".php": "php",
+    ".ex": "elixir",
+    ".dart": "dart",
+    ".clj": "clojure",
+    ".cr": "crystal",
+    ".scala": "scala"
+  }
+}
