@@ -7,4 +7,3 @@ if [ "${SKIP_LINT:-0}" = "1" ]; then
 fi
 
 ./scripts/lint.sh
-

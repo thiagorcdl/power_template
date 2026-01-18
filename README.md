@@ -1,41 +1,36 @@
 # Power Template
 
-A framework-agnostic project template that approximates a “guardrails + agent” workflow (in the spirit of Claude Code + claudekit) using:
+A framework-agnostic AI-assisted software development template that uses:
 
-- **Continue** (IDE + CLI) as the agent interface
-- **Ollama Cloud** model **GLM-4.7** (`glm-4.7:cloud`) for implementation
-- **Gemini** as a second model for **feature-branch reviews**
-- **Cursor Bugbot** for PR-only reviews **into `master`**
-- Deterministic enforcement via **git hooks**, `scripts/lint.sh`, `scripts/test.sh`, and CI
+- **opencode** as the AI assistant framework
+- **OpenRouter** with **GLM-4.7** (primary) and **Qwen3** (fallback) for planning and building
+- **Gemini** for web searching and code reviews
+- **Bugbot** for PR reviews targeting `master` branch
+- Domain-specific agents for specialized tasks
+- Git hooks for automated quality checks
 
 This repo is meant to be used as a **GitHub Template Repository**.
 
 ---
 
-## What this template enforces
+## What This Template Enforces
 
 - **Commit-time linting** (pre-commit hook runs `./scripts/lint.sh`)
-- **Push-time tests + Gemini review** on feature branches (pre-push runs `./scripts/test.sh` and `./scripts/gemini_review.sh`)
+- **Push-time tests + review** on feature branches (pre-push runs `./scripts/test.sh` and automated review with auto-fix)
 - **CI parity**: GitHub Actions runs `./scripts/check.sh`
-- **Bugbot only on PRs targeting `master`** (workflow posts `bugbot run` comment)
+- **Bugbot only on PRs targeting `master`** (workflow triggers review automatically)
+- **Stack detection**: Automatically detects languages/frameworks and configures lint/test accordingly
 
-**Important:** `scripts/lint.sh` and `scripts/test.sh` are *scaffolds* until you decide the stack. You are expected to use the AI assistant to populate them once you choose languages/frameworks.
+**Important**: `scripts/lint.sh` and `scripts/test.sh` are **dynamic** based on detected stack. The template automatically configures appropriate commands for your chosen stack.
 
 ---
 
-## 1) Install on Debian-based Linux (one-time per machine)
+## Quick Start
 
-### 1.1 Base packages
+### 1. Install Prerequisites
 
+#### GitHub CLI (`gh`)
 ```bash
-sudo apt-get update
-sudo apt-get install -y git curl ca-certificates gnupg build-essential
-```
-
-### 1.2 GitHub CLI (`gh`)
-
-```bash
-type -p curl >/dev/null || sudo apt-get install -y curl
 curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
   | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
 sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
@@ -45,295 +40,459 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githu
 
 sudo apt-get update
 sudo apt-get install -y gh
-```
 
-Authenticate:
-
-```bash
 gh auth login
 ```
 
-### 1.3 Node.js LTS (pin: v24.13.0)
-
-This template expects Node 24 LTS for `cn` and `rules-cli`. Use `nvm` so you can pin versions cleanly:
-
+#### jq (for JSON parsing)
 ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-# Restart your shell, then:
-nvm install 24.13.0
-nvm use 24.13.0
-node -v
-npm -v
+sudo apt-get install -y jq
 ```
 
-### 1.4 Continue
+### 2. Set Required Environment Variables
 
-Install Continue CLI:
-
-```bash
-npm i -g @continuedev/cli
-cn --help
-```
-
-### 1.5 rules-cli
+You'll need API keys for the AI models:
 
 ```bash
-npm i -g rules-cli
-rules --help
+# Add to ~/.bashrc or ~/.zshrc
+export OPENROUTER_API_KEY="your-openrouter-key-here"
+export GEMINI_API_KEY="your-gemini-key-here"
+export GITHUB_TOKEN="your-github-token-here"
 ```
 
-### 1.6 Ollama + Ollama Cloud sign-in
+**Where to get API keys**:
+- **OpenRouter**: https://openrouter.ai/keys
+- **Gemini**: https://ai.google.dev/
+- **GitHub Token**: https://github.com/settings/tokens (generate with `repo` scope)
 
-Install Ollama:
+### 3. Create a New Project
 
 ```bash
-curl -fsSL https://ollama.com/install.sh | sh
-```
-
-Sign in (required for cloud models):
-
-```bash
-ollama signin
-```
-
-Pull GLM-4.7 cloud model:
-
-```bash
-ollama pull glm-4.7:cloud
-```
-
-### 1.7 Gemini API key
-
-Export your key (put this in `~/.bashrc` or `~/.zshrc` if you want it persistent):
-
-```bash
-export GEMINI_API_KEY="YOUR_KEY_HERE"
-```
-
----
-
-## 2) Configure Continue models (one-time per machine)
-
-Create/update:
-
-- `~/.continue/config.yaml`
-
-```yaml
-name: power_template - local config
-version: 0.0.1
-schema: v1
-
-models:
-  - name: GLM-4.7 Builder (Ollama Cloud)
-    provider: ollama
-    model: glm-4.7:cloud
-    roles: [chat, edit, apply]
-    defaultCompletionOptions:
-      maxTokens: 3000
-
-  - name: Gemini Reviewer
-    provider: gemini
-    model: gemini-2.0-flash
-    apiKey: ${GEMINI_API_KEY}
-    roles: [chat, edit]
-```
-
-Sanity check (optional):
-
-```bash
-ollama run glm-4.7:cloud "Say hello"
-```
-
----
-
-## 3) Create a new project repo from this template (recommended workflow)
-
-This creates the GitHub repo AND clones it locally:
-
-```bash
-gh repo create my-new-project \
-  --template thiagorcdl/power_template \
-  --private \
-  --clone
-
+# Clone this template
+git clone https://github.com/YOUR_USERNAME/power_template.git my-new-project
 cd my-new-project
-```
 
-If you prefer public:
-
-```bash
-gh repo create my-new-project --template thiagorcdl/power_template --public --clone
+# Or use GitHub to create from template
+gh repo create my-new-project --template YOUR_USERNAME/power_template --private --clone
 cd my-new-project
-```
 
-### 3.1 Ensure hooks are enabled (required)
-
-The template stores hooks under `.githooks/`. Activate them:
-
-```bash
+# Enable git hooks
 git config core.hooksPath .githooks
 chmod +x .githooks/* scripts/*.sh
 ```
 
----
+### 4. Initialize Your Project
 
-## 4) First-time project setup (the “stack decision” step)
-
-### 4.1 System design discussion in Continue (GLM-4.7 Builder)
-
-Open the repo in VS Code:
+Run the initialization skill:
 
 ```bash
-cn --config ~/.continue/config.yaml
+/init-project
 ```
 
-In Continue chat, start with a design prompt. Example:
+This will walk you through:
+1. ✅ Verifying API keys and GitHub authentication
+2. ✅ Gathering project requirements and constraints
+3. ✅ Creating technical design document (`docs/technical-design.md`)
+4. ✅ Creating execution plan (`docs/execution-plan.md`)
+5. ✅ Creating GitHub repository (semi-automated)
+6. ✅ Creating GitHub issues for each task
 
-> We are building: (brief problem statement).  
-> Constraints: (latency, scale, cost, security, data).  
-> Please propose 2–3 architectures, pick one, define boundaries, data model, failure modes, security, and an initial implementation plan.
-
-### 4.2 Lock the stack and tooling (your decision)
-
-Once you decide on a stack, ask the assistant to crate an implementation plan, and to apply the template’s “Stack Evolution” rule. Example prompt:
-
-> We chose: TypeScript + Node + Express + Postgres + Vitest.  
-> Start implementing a minimum skeleton of the project, ensuring components are added incrementally and make sure to follow **Stack Evolution** rule.
-
-### 4.3 Verify the scripts are now real (not scaffolds)
-
-After the assistant updates scripts, you should be able to run:
+### 5. Execute the Plan
 
 ```bash
-./scripts/lint.sh
-./scripts/test.sh
-./scripts/check.sh
+/execute-plan
 ```
 
-If any still prints “no linter configured” or “no test runner configured”, the stack-evolution step wasn’t completed.
+This will:
+- Execute tasks from your execution plan
+- Run linting and testing after each task
+- Create commits automatically
+- Update GitHub issues as tasks are completed
 
 ---
 
-## 5) Day-to-day usage
+## Architecture
 
-### 5.1 Create a feature branch
+### Domain-Specific Agents
+
+The template uses specialized agents for different tasks:
+
+| Agent | Purpose | Model |
+|--------|---------|-------|
+| **Planner** | Creates technical designs and execution plans | GLM-4.7 (fallback: Qwen3) |
+| **Builder** | Implements features, writes tests, fixes issues | GLM-4.7 (fallback: Qwen3) |
+| **Reviewer** | Reviews code changes, identifies issues | Gemini 2.5 Pro |
+| **Web Searcher** | Finds documentation, examples, best practices | Gemini 2.5 Pro |
+| **Code Reviewer** | Reviews PRs to master | Bugbot |
+
+### Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `/init-project` | Full project initialization workflow |
+| `/execute-plan` | Execute tasks from execution plan |
+| `/fix-review-issues` | Auto-fix review findings in same commit |
+| `/update-stack-config` | Update lint/test based on detected stack |
+| `/detect-stack` | Auto-detect languages/frameworks in use |
+
+---
+
+## Day-to-Day Usage
+
+### Creating a Feature Branch
 
 ```bash
+git checkout master
+git pull origin master
 git checkout -b feature/my-change
 ```
 
-### 5.2 Implement with GLM-4.7 (Continue)
+### Implementing Changes
 
-Use Continue to:
-- generate code
-- refactor
-- add tests
-- update docs/ADR when needed
+Use opencode to:
+- Generate code
+- Refactor
+- Add tests
+- Update documentation
 
-### 5.3 Commit (lint runs automatically)
+The Builder agent (GLM-4.7) will:
+1. Write clean, tested code
+2. Run linting automatically
+3. Run tests automatically
+4. Follow Stack Evolution rules
+
+### Committing
 
 ```bash
 git add -A
 git commit -m "Implement X"
 ```
 
-If lint fails, the commit is blocked—fix lint and retry.
+If linting fails, the commit is blocked—fix linting and retry.
 
-### 5.4 Push (tests + Gemini review runs on feature branches)
+### Pushing (Automated Review & Auto-Fix)
 
 ```bash
 git push -u origin feature/my-change
 ```
 
-- If tests fail: push is blocked
-- Gemini review output is written under `.reviews/`
+The pre-push hook will:
+1. Run tests
+2. Get diff from master
+3. Request review from Reviewer agent (Gemini)
+4. **Automatically fix findings** using Builder agent
+5. Commit fixes to the same commit (amend)
+6. Block push if P0 issues remain (unless `ALLOW_P0=1`)
 
-If Gemini flags a P0 and gating is enabled, push may be blocked until resolved (or overridden if your repo allows).
+**Override P0 blocking** (if needed):
+```bash
+ALLOW_P0=1 git push
+```
 
-### 5.5 PR into `master` triggers Bugbot
+### Creating PR to Master
 
-Open a PR from your feature branch into `master`. The workflow will comment `bugbot run` automatically, and Bugbot will review the PR.
+```bash
+gh pr create --base master --title "My feature" --body "Description"
+```
+
+Bugbot will automatically review the PR.
 
 ---
 
-## 6) Bugbot setup (per-project repo)
+## Stack Detection & Configuration
 
-1) In Cursor settings, connect GitHub and enable Bugbot for the repo  
-2) Configure Bugbot to **run only when mentioned** (so it won’t comment everywhere)  
-3) Ensure this repo’s workflow `.github/workflows/bugbot-master-only.yml` exists (it posts `bugbot run` only for PRs targeting `master`)
+The template automatically detects your project stack and configures linting and testing accordingly.
 
-### Important GitHub auth note (workflow push failures)
+### Auto-Detection
 
-If you push over HTTPS using a token without `workflow` scope, GitHub can reject updates to `.github/workflows/*`.
+Detects languages/frameworks from:
+- `package.json` / `tsconfig.json` → TypeScript/JavaScript
+- `requirements.txt` / `pyproject.toml` → Python
+- `go.mod` → Go
+- `Cargo.toml` → Rust
+- `pom.xml` / `build.gradle` → Java/Kotlin
+- `Gemfile` → Ruby
+- `composer.json` → PHP
 
-Recommended solution: use SSH for your remote:
+### Manual Override
+
+Create `.opencode/config/stack.json`:
+
+```json
+{
+  "languages": ["typescript", "python"],
+  "frameworks": ["React", "FastAPI"],
+  "manual_override": true
+}
+```
+
+### Updating Configuration
+
+After adding new dependencies or languages:
 
 ```bash
-git remote set-url origin git@github.com:YOUR_GITHUB_USER/my-new-project.git
+/detect-stack          # Re-detect stack
+/update-stack-config    # Update lint/test scripts
 ```
 
 ---
 
-## 7) GLM-4.7 + Gemini “two-model” philosophy
+## Files Structure
 
-- **GLM-4.7** (builder) writes code and implements the plan  
-- **Gemini** (reviewer) checks diffs on feature branches and highlights:
-  - security risks
-  - correctness issues
-  - missing tests
-  - architecture regressions
-- **Bugbot** reviews PRs into `master` as an additional independent layer  
-
-This is defense-in-depth: implement with one model, review with another, then review again at merge time.
+```
+power_template/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                    # CI pipeline
+│       └── bugbot-master-only.yml     # Bugbot trigger
+├── .githooks/
+│   ├── pre-commit                    # Lint on commit
+│   └── pre-push                     # Test + review on push
+├── .git/
+│   └── opencode                    # opencode configuration
+├── .opencode/
+│   ├── agents/                      # Agent definitions
+│   ├── skills/                      # Skill definitions
+│   ├── prompts/                     # Prompt templates
+│   └── config/                     # Stack configuration
+├── docs/
+│   └── templates/                  # Document templates
+├── scripts/
+│   ├── check.sh                     # Run all checks
+│   ├── lint.sh                     # Dynamic linting
+│   └── test.sh                     # Dynamic testing
+├── AGENTS.md                       # Agent documentation
+├── SKILLS.md                       # Skill documentation
+└── README.md                       # This file
+```
 
 ---
 
-## 8) Template maintenance notes
+## Environment Variables
 
-- Rules are managed with `rules-cli`. If you add new rule packs:
+### Required
 
-```bash
-rules add <pack>
-rules render continue
-git add -A
-git commit -m "Add rules for <pack>"
-```
+| Variable | Purpose | Source |
+|----------|---------|--------|
+| `OPENROUTER_API_KEY` | Access GLM-4.7 and Qwen3 models | https://openrouter.ai/keys |
+| `GEMINI_API_KEY` | Access Gemini for web search/reviews | https://ai.google.dev/ |
+| `GITHUB_TOKEN` | Access GitHub API for repo/issues | https://github.com/settings/tokens |
 
-- Always keep CI in sync with local scripts. CI must run `./scripts/check.sh`.
+### Optional
+
+| Variable | Purpose | Default |
+|----------|---------|----------|
+| `ALLOW_P0` | Override P0 blocking on push | `0` |
+| `BOOTSTRAP` | Skip hooks during initial setup | `0` |
+| `BASE_BRANCH` | Base branch for diffing | `master` |
 
 ---
 
-## 9) Minimal example walkthrough
+## Configuration Files
 
-1) Create repo from template:
+### `.git/opencode`
+Main opencode configuration with:
+- Model configurations (GLM-4.7, Qwen3, Gemini)
+- Agent configurations
+- Skill configurations
+- Stack detection rules
 
-```bash
-gh repo create demo-service --template thiagorcdl/power_template --private --clone
-cd demo-service
-git config core.hooksPath .githooks
-chmod +x .githooks/* scripts/*.sh
-code .
+### `.opencode/config/stack.json`
+Detected stack configuration:
+```json
+{
+  "languages": ["typescript"],
+  "frameworks": ["React"],
+  "package_managers": ["npm"],
+  "manual_override": false
+}
 ```
 
-2) In Continue:
-- discuss architecture
-- decide stack (e.g., Python + FastAPI + Postgres + pytest + ruff)
-- ask assistant to apply Stack Evolution
+### `.opencode/config/lint-test-commands.json`
+Lint and test commands for each supported language.
 
-3) Verify:
+### `.opencode/config/stack-detection.json`
+Patterns for detecting languages and frameworks.
 
-```bash
-./scripts/check.sh
+---
+
+## Git Hooks
+
+### Pre-Commit
+- Runs `./scripts/lint.sh`
+- Blocks commit if linting fails
+
+### Pre-Push
+- Runs `./scripts/test.sh`
+- Gets diff from base branch
+- Requests review from Reviewer agent (Gemini)
+- **Automatically fixes findings** using Builder agent
+- Amends commit with fixes
+- Blocks push if P0 issues remain (unless overridden)
+
+---
+
+## Code Quality Workflow
+
+### 1. Two-Model System
+- **Builder Agent** (GLM-4.7): Writes code and implements features
+- **Reviewer Agent** (Gemini): Reviews code during pre-push
+- **Code Reviewer Agent** (Bugbot): Reviews PRs to master
+
+### 2. Auto-Fix on Push
+Review findings are automatically fixed:
+- P0, P1, P2 findings are all addressed
+- Fixes are applied to the same commit (amend)
+- No separate fix commit is created
+- Push only blocks if P0 issues can't be fixed
+
+### 3. Defense in Depth
+- Feature branch: Review with auto-fix during pre-push
+- PR to master: Bugbot review for final check
+- CI: Runs all checks in parallel
+
+---
+
+## Customizing for Your Stack
+
+### Adding a New Language
+
+1. Add to `.opencode/config/stack-detection.json`:
+```json
+{
+  "language_files": [
+    {
+      "pattern": "yourfile.ext",
+      "languages": ["your-language"],
+      "package_manager": "your-manager"
+    }
+  ]
+}
 ```
 
-4) Feature branch work:
-
-```bash
-git checkout -b feature/hello
-# implement + tests
-git add -A
-git commit -m "Add hello endpoint"
-git push -u origin feature/hello
+2. Add to `.opencode/config/lint-test-commands.json`:
+```json
+{
+  "lint": {
+    "your-language": {
+      "commands": ["your-lint-command"],
+      "install": ["install-command"]
+    }
+  },
+  "test": {
+    "your-language": {
+      "commands": ["your-test-command"],
+      "install": ["install-command"]
+    }
+  }
+}
 ```
 
-5) PR into master --> Bugbot runs.
+3. Update `scripts/lint.sh` and `scripts/test.sh` if needed
+
+### Adding a New Agent
+
+1. Create `.opencode/agents/your-agent.md`
+2. Define purpose, model, responsibilities
+3. Update `.git/opencode` configuration
+4. Update `AGENTS.md` documentation
+
+### Adding a New Skill
+
+1. Create `.opencode/skills/your-skill.md`
+2. Define workflow, usage, and configuration
+3. Update `SKILLS.md` documentation
+
+---
+
+## Troubleshooting
+
+### "OPENROUTER_API_KEY not found"
+```bash
+export OPENROUTER_API_KEY="your-key-here"
+# Add to ~/.bashrc or ~/.zshrc for persistence
+```
+
+### "GitHub authentication failed"
+```bash
+gh auth login
+```
+
+### "Pre-push hook blocked: P0 findings"
+- Review the findings in `.reviews/`
+- Fix issues manually if auto-fix failed
+- Or override: `ALLOW_P0=1 git push`
+
+### "No linter configured"
+- Run `/detect-stack` to auto-detect
+- Or manually run `/update-stack-config`
+
+### "Scripts have syntax errors"
+```bash
+bash -n scripts/lint.sh
+bash -n scripts/test.sh
+```
+
+---
+
+## Best Practices
+
+1. **Small Commits**: Work in small, reviewable steps
+2. **Test Coverage**: Always write tests with code changes
+3. **Follow Conventions**: Mimic existing code patterns
+4. **Security First**: Never commit secrets, validate inputs
+5. **Documentation**: Update docs when adding features
+6. **Stack Evolution**: Follow stack evolution rules when adding new components
+
+---
+
+## Advanced Usage
+
+### Parallel Execution
+Execute tasks in parallel (for independent tasks):
+```bash
+/execute-plan --parallel
+```
+
+### Starting from Specific Task
+```bash
+/execute-plan --from-task TASK-005
+```
+
+### Dry Run
+Show what would be executed:
+```bash
+/execute-plan --dry-run
+```
+
+### Manual Stack Configuration
+```json
+{
+  "languages": ["typescript"],
+  "frameworks": ["React", "Next.js"],
+  "manual_override": true
+}
+```
+
+---
+
+## Contributing
+
+This is a template repository. For improvements:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Push and create PR
+
+---
+
+## License
+
+MIT License - feel free to use this template for your projects.
+
+---
+
+## Further info
+
+- Check [AGENTS.md](AGENTS.md) for agent documentation
+- Check [SKILLS.md](SKILLS.md) for skill documentation

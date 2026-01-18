@@ -5,4 +5,8 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+.opencode/
+docs/technical-design.md
+docs/execution-plan.md
+*.review-fix.md
 
