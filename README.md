@@ -81,6 +81,12 @@ chmod +x .githooks/* scripts/*.sh
 
 ### 4. Initialize Your Project
 
+Run opencode:
+
+```bash
+opencode
+```
+
 Run the initialization skill:
 
 ```bash
