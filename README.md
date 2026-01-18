@@ -67,16 +67,14 @@ export GITHUB_TOKEN="your-github-token-here"
 
 ### 3. Create a New Project
 
+Create repo from template
 ```bash
-# Clone this template
-git clone https://github.com/YOUR_USERNAME/power_template.git my-new-project
+gh repo create my-new-project --template thiagorcdl/power_template --private --clone
 cd my-new-project
+```
 
-# Or use GitHub to create from template
-gh repo create my-new-project --template YOUR_USERNAME/power_template --private --clone
-cd my-new-project
-
-# Enable git hooks
+Enable git hooks
+```bash
 git config core.hooksPath .githooks
 chmod +x .githooks/* scripts/*.sh
 ```
