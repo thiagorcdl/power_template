@@ -49,11 +49,22 @@ gh auth login
 ### Phase 2: Project Planning
 
 #### 2.1 Gather Requirements
-Ask user for:
-- Project goal (what problem are you solving?)
-- Requirements (functional and non-functional)
-- Constraints (latency, scale, cost, security)
-- Preferences (languages, frameworks, databases, deployment)
+
+**FIRST INTERACTION - FREE TEXT ONLY**
+Ask the user: "What project do you have in mind?"
+- DO NOT provide any pre-defined options or multiple-choice answers
+- Use free text input only - let the user describe their project in their own words
+- Wait for the user's response before proceeding
+
+**AFTER USER RESPONSE**
+Then ask clarifying questions to understand:
+- What problem are you solving?
+- Who are the users?
+- What are the main features?
+- Any functional requirements?
+- Any non-functional requirements (latency, scale, cost, security)?
+- Any constraints or limitations?
+- Any preferences for languages, frameworks, databases, deployment?
 
 #### 2.2 Create Technical Design
 Use Planner Agent to create `docs/technical-design.md` with:
