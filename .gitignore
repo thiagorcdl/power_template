@@ -99,4 +99,6 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
+# Operational tracking (unversioned)
+.operational/
 

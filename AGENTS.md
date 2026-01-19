@@ -256,3 +256,140 @@ To add a new specialized agent:
 - Reviewer agents should use lower temperature for consistency
 - Builder agents should use moderate temperature for creativity
 - Planner agents should use lower temperature for structured output
+
+---
+
+## Operational State Tracking
+
+**CRITICAL**: All agents MUST maintain operational state to enable recovery from interruptions (directory renames, system restarts, etc.).
+
+### Operational Directory Structure
+
+```
+.operational/
+├── project-objective.md    # Overall project goal and user requirements
+├── todo-checklist.md       # Current TODO items with status tracking
+└── session-history.md      # Optional: session history for context
+```
+
+### Responsibilities for All Agents
+
+1. **ALWAYS** maintain `.operational/` files during workflow execution
+2. **ALWAYS** read `.operational/project-objective.md` and `.operational/todo-checklist.md` before taking any action
+3. **ALWAYS** update these files after completing any task or receiving user input
+4. **NEVER** lose user requirements or project context
+
+### project-objective.md Format
+
+```markdown
+# Project Objective
+
+## Project Description
+[Original project goal from first question in init-project]
+
+## User Requirements
+
+### Functional Requirements
+- [Requirement 1]
+- [Requirement 2]
+
+### Non-Functional Requirements
+- [Latency/Performance]
+- [Scale/Concurrency]
+- [Security/Compliance]
+
+### Constraints
+- [Budget/Cost]
+- [Technology constraints]
+- [Timeline]
+
+### Preferences
+- [Languages/Frameworks]
+- [Database preferences]
+- [Deployment preferences]
+
+## Clarifying Questions & Answers
+
+### Q: [Question asked]
+**A:** [User's response]
+
+### Q: [Another question]
+**A:** [User's response]
+
+## Context Notes
+[Any additional context that should be preserved]
+```
+
+### todo-checklist.md Format
+
+```markdown
+# Operational TODO Checklist
+
+## Current Session: [Timestamp]
+- Skill: [skill-name]
+- Agent: [agent-name]
+- Phase: [current-phase]
+
+## Completed Tasks
+
+- [x] [Task description] (completed at [timestamp])
+- [x] [Task description] (completed at [timestamp])
+
+## In Progress
+
+- [ ] [Task description] (started at [timestamp])
+  - Subtask: [detail]
+  - Subtask: [detail]
+
+## Pending Tasks
+
+- [ ] [Task description] (priority: high/medium/low)
+- [ ] [Task description] (priority: high/medium/low)
+
+## Blocked/Issues
+
+- [ ] [Description of blocker] (since [timestamp])
+
+## Next Actions
+
+1. [Next immediate action]
+2. [Follow-up action]
+```
+
+### Recovery Protocol
+
+**When resuming after interruption:**
+
+1. **ALWAYS** read `.operational/project-objective.md` first to understand project context
+2. **ALWAYS** read `.operational/todo-checklist.md` to see current state
+3. Report to user: "I've reviewed the operational state. Here's where we left off..."
+4. Ask user: "Do you want to continue from here, or would you like to make any changes?"
+
+**When starting a new skill:**
+
+1. Check if `.operational/` exists
+2. If exists, read to understand context
+3. Update files with new workflow context
+4. If doesn't exist, create initial files with project objective and TODO checklist
+
+### Skill-Specific Requirements
+
+#### init-project
+- Create `.operational/project-objective.md` after gathering requirements
+- Create `.operational/todo-checklist.md` before Phase 1
+- Update TODO checklist as each phase completes
+
+#### execute-plan
+- Read `.operational/project-objective.md` to understand goals
+- Create task-specific TODO for each execution plan item
+- Mark tasks complete as work progresses
+
+#### fix-review-issues
+- Read `.operational/project-objective.md` for context
+- Create TODO items for each review finding
+- Track fix progress in checklist
+
+#### All skills
+- Read operational files on startup
+- Update after each meaningful action
+- Preserve user input and decisions

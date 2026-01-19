@@ -21,14 +21,22 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 **Workflow**:
 
 #### Phase 1: Setup
+- **Create `.operational/` directory** with `todo-checklist.md` containing all phases
 - Check for required API keys:
   - `OPENROUTER_API_KEY` (for GLM4.7 and Qwen3)
   - `GEMINI_API_KEY` (for web searching)
   - `GITHUB_TOKEN` (for repo creation and issue management)
 - If missing, guide user to set them in environment
 - Verify GitHub authentication with `gh auth status`
+- Update `todo-checklist.md` to mark Phase 1 complete
 
 #### Phase 2: Planning
+- **Create `.operational/project-objective.md`** with:
+  - Original project description from user
+  - All user requirements (functional, non-functional)
+  - All constraints (latency, scale, cost, security, compliance)
+  - All user preferences (languages, frameworks, databases, deployment)
+  - All clarifying questions and user answers
 - Ask user for:
   - Project goal (what problem are you solving?)
   - Requirements (functional and non-functional)
@@ -37,6 +45,7 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 - Use **Web Searcher Agent** to research best practices for the requirements
 - Use **Planner Agent** to propose 2-3 architecture options
 - User selects architecture or provides feedback for iteration
+- Update `todo-checklist.md` to mark Phase 2 complete
 
 #### Phase 3: Technical Design
 - Use **Planner Agent** to generate technical design document
@@ -49,6 +58,7 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
   - Security considerations
   - Deployment strategy
   - Monitoring and observability
+- Update `todo-checklist.md` to mark Phase 3 complete
 
 #### Phase 4: Execution Planning
 - Use **Planner Agent** to generate execution plan
@@ -58,6 +68,7 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
   - Dependencies between tasks
   - Milestones
   - Estimated effort
+- Update `todo-checklist.md` to mark Phase 4 complete
 
 #### Phase 5: GitHub Setup (Semi-automated)
 - Generate proposed repository name based on project
@@ -69,6 +80,7 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 - Create GitHub repo via `gh repo create`
 - Configure remote
 - Push initial commit with template files
+- Update `todo-checklist.md` to mark Phase 5 complete
 
 #### Phase 6: Issue Creation
 - Parse execution plan
@@ -79,6 +91,7 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
   - Dependencies (linked issues)
   - Priority label
   - Detailed implementation instructions
+- Update `todo-checklist.md` to mark Phase 6 complete and skill complete
 
 **Usage**:
 ```
@@ -107,18 +120,24 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 
 **Workflow**:
 
-1. **Load Plan**
+1. **Load Operational State**
+   - Read `.operational/project-objective.md` to understand project context
+   - Read `.operational/todo-checklist.md` to see current progress
+   - If interrupted, resume from last incomplete task
+
+2. **Load Plan**
    - Read `docs/execution-plan.md`
    - Parse tasks, priorities, and dependencies
    - Verify GitHub issues exist for tasks
 
-2. **Execution Mode**
+3. **Execution Mode**
    - Ask user: Execute sequentially or in parallel?
    - **Sequential**: Execute tasks one at a time in dependency order
    - **Parallel**: Execute independent tasks concurrently
 
-3. **Task Execution**
+4. **Task Execution**
    For each task:
+   - Create TODO item in `.operational/todo-checklist.md`
    - Use **Builder Agent** to implement the task
    - Follow instructions from GitHub issue
    - Write appropriate tests
@@ -127,17 +146,20 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
    - Fix any issues that arise
    - Create commit with descriptive message
    - Update GitHub issue status
+   - Mark TODO item complete in `todo-checklist.md`
 
-4. **Progress Tracking**
+5. **Progress Tracking**
    - Mark completed issues
    - Update progress in execution plan
    - Report status to user
+   - Update `todo-checklist.md` with next actions
 
-5. **Completion**
+6. **Completion**
    - When all tasks complete, verify:
    - All tests pass
    - All lint checks pass
    - All GitHub issues closed
+   - Mark skill complete in `todo-checklist.md`
 
 **Usage**:
 ```
@@ -163,13 +185,19 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 
 **Workflow**:
 
-1. **Load Review Findings**
+1. **Load Operational State**
+   - Read `.operational/project-objective.md` for context
+   - Create or update `.operational/todo-checklist.md` with review findings
+
+2. **Load Review Findings**
    - Read review findings file or parse from input
    - Parse findings by severity (P0, P1, P2)
    - Sort by severity (P0 first)
+   - Add findings as TODO items in `todo-checklist.md`
 
-2. **Fix Each Finding**
+3. **Fix Each Finding**
    For each finding:
+   - Mark finding as "in progress" in `todo-checklist.md`
    - Identify file and line number
    - Parse the issue description
    - Use **Builder Agent** to generate fix
@@ -177,16 +205,19 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
    - Run `./scripts/lint.sh`
    - Run `./scripts/test.sh`
    - If tests fail, iterate on fix
+   - Mark finding as "completed" in `todo-checklist.md`
 
-3. **Verification**
+4. **Verification**
    - After fixing all findings
    - Re-run review to verify fixes
    - Report remaining issues (if any)
+   - Update `todo-checklist.md` with verification results
 
-4. **Commit**
+5. **Commit**
    - Stage all fixes
    - Create commit: "fix: address review findings"
    - Fixes are part of the same commit, not separate
+   - Update `todo-checklist.md` to mark skill complete
 
 **Usage**:
 ```
@@ -379,6 +410,139 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 - Skills should respect environment variables for configuration
 - Skills should use appropriate agents for each task
 - Skills should be documented with examples
+- **CRITICAL**: Skills MUST maintain operational state in `.operational/` directory for recovery from interruptions
+
+---
+
+## Operational State Management
+
+### Overview
+
+All skills MUST maintain operational state to enable recovery from directory renames, system restarts, or other interruptions. The `.operational/` directory contains:
+
+```
+.operational/
+├── project-objective.md    # Project goal, requirements, and user answers
+├── todo-checklist.md       # TODO items with status tracking
+└── session-history.md      # Optional: session context
+```
+
+### Responsibilities for All Skills
+
+1. **Always read** `.operational/project-objective.md` and `.operational/todo-checklist.md` before taking action
+2. **Always update** these files after completing tasks or receiving user input
+3. **Create** `.operational/` directory if it doesn't exist
+4. **Never lose** user requirements or project context
+
+### Skill-Specific Requirements
+
+#### init-project
+- **Phase 1**: Create `.operational/todo-checklist.md` with all phases as TODO items
+- **Phase 2**: Create `.operational/project-objective.md` with:
+  - Original project description
+  - All user requirements
+  - All clarifying questions and answers
+- **Throughout**: Update todo-checklist.md as each phase completes
+- **Recovery**: If interrupted, read both files to resume from last completed phase
+
+#### execute-plan
+- **Start**: Read `.operational/project-objective.md` to understand project context
+- **Start**: Read `.operational/todo-checklist.md` to see current progress
+- **Task execution**: For each task, create TODO items in checklist and mark complete when done
+- **Throughout**: Update todo-checklist.md after each task completes
+- **Recovery**: If interrupted, read both files to resume from last incomplete task
+
+#### fix-review-issues
+- **Start**: Read `.operational/project-objective.md` for context
+- **Start**: Create `.operational/todo-checklist.md` with review findings as TODO items
+- **Throughout**: Mark findings as fixed as progress continues
+- **Recovery**: If interrupted, read files to resume from last unfixed finding
+
+#### update-stack-config
+- **Start**: Read `.operational/project-objective.md` (if exists) for context
+- **During**: Update todo-checklist.md with progress
+- **After**: Commit changes and update checklist
+
+#### detect-stack
+- **Start**: Read `.operational/project-objective.md` (if exists) for context
+- **After**: Create/update `.opencode/config/stack.json` and update todo-checklist.md
+
+### Recovery Protocol
+
+**When resuming after interruption:**
+
+1. Read `.operational/project-objective.md` to understand project context
+2. Read `.operational/todo-checklist.md` to see current state
+3. Report to user: "I've reviewed the operational state. Here's where we left off..."
+4. Ask: "Do you want to continue from here, or would you like to make any changes?"
+
+**When starting any skill:**
+
+1. Check if `.operational/` exists
+2. If yes, read both files to understand context
+3. Update files with new workflow context
+4. If no, create initial files
+
+### File Format Examples
+
+**project-objective.md**:
+```markdown
+# Project Objective
+
+## Project Description
+[Original project description from user]
+
+## User Requirements
+
+### Functional Requirements
+- [Requirement 1]
+- [Requirement 2]
+
+### Non-Functional Requirements
+- [Performance requirements]
+- [Scale requirements]
+
+### Constraints
+- [Budget/cost constraints]
+- [Technology constraints]
+
+### Preferences
+- [Languages/frameworks]
+- [Database preferences]
+
+## Clarifying Questions & Answers
+
+### Q: [Question]
+**A:** [User response]
+```
+
+**todo-checklist.md**:
+```markdown
+# Operational TODO Checklist
+
+## Current Session: [Timestamp]
+- Skill: [skill-name]
+- Agent: [agent-name]
+- Phase: [phase-name]
+
+## Completed Tasks
+- [x] [Task description] (completed at [timestamp])
+- [x] [Task description] (completed at [timestamp])
+
+## In Progress
+- [ ] [Task description] (started at [timestamp])
+  - Subtask: [detail]
+
+## Pending Tasks
+- [ ] [Task description] (priority: high/medium/low)
+
+## Blocked/Issues
+- [ ] [Blocker description] (since [timestamp])
+
+## Next Actions
+1. [Next immediate action]
+2. [Follow-up action]
+```
 
 ---
 
