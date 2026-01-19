@@ -67,10 +67,6 @@ vendor/
 *~
 .DS_Store
 
-# Documentation
-docs/technical-design.md
-docs/execution-plan.md
-
 # Build artifacts
 build/
 dist/
