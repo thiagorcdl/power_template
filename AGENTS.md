@@ -53,6 +53,7 @@ temperature: 0.3
 - Update documentation
 - Apply fixes from review findings
 - Follow Stack Evolution rules
+- Attempt to self-unblock 3 times before asking for human intervention
 
 **When Used**:
 - During execute-plan skill
