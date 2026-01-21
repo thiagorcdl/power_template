@@ -1,11 +1,11 @@
 # Code Reviewer Agent (Bugbot)
 
 ## Purpose
-Reviews pull requests targeting the master branch to ensure code quality and catch potential issues before merging.
+Reviews pull requests targeting the master branch to ensure code quality and catch potential issues before production deployment.
 
 ## Model Configuration
-- **Provider**: Bugbot (external service)
-- **Trigger**: PR opened/updated to master branch
+- **Provider**: Bugbot (Cursor integration - external service)
+- **Trigger**: PR opened/updated to master branch via GitHub App
 
 ## Responsibilities
 - Review PR changes thoroughly
@@ -17,21 +17,21 @@ Reviews pull requests targeting the master branch to ensure code quality and cat
 - Check documentation updates
 
 ## When Used
-- When PR is opened to master branch
-- When PR is updated targeting master branch
-- When explicitly triggered via `/bugbot` comment
+- When PR is opened from `development` to `master`
+- When PR targeting `master` is updated
+- When explicitly triggered via comment
 
 ## Trigger Mechanism
 
 ### Automatic Trigger
-The GitHub workflow `.github/workflows/bugbot-master-only.yml` automatically posts a `bugbot run` comment when:
+Bugbot is configured as a GitHub App and automatically triggers when:
 - PR is opened targeting `master`
+- PR is updated (new commits pushed) targeting `master`
 - PR is marked ready for review targeting `master`
-- PR is reopened targeting `master`
 
 ### Manual Trigger
-Developers can manually trigger Bugbot by commenting:
-- `/bugbot run`
+Developers can manually trigger Bugbot by commenting on the PR:
+- `@bugbot run`
 - `/bugbot review`
 
 ## Review Process
@@ -104,34 +104,17 @@ For each issue found:
 
 ## Configuration
 
-### GitHub Workflow
-Located at: `.github/workflows/bugbot-master-only.yml`
+### Setting Up Bugbot in GitHub
 
-```yaml
-name: Bugbot (master only)
-
-on:
-  pull_request:
-    types: [opened, ready_for_review, reopened]
-    branches: [master]
-
-jobs:
-  trigger:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Bugbot review
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            if (!pr || pr.base.ref !== "master") return;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.number,
-              body: "bugbot run"
-            });
-```
+1. Visit https://cursor.com/bugbot
+2. Sign in with your Cursor account
+3. Click "Get Bugbot" or "Install Bugbot"
+4. Select your GitHub repositories
+5. Grant Bugbot necessary permissions:
+   - Read pull requests
+   - Create pull request reviews
+   - Post comments on pull requests
+6. Configure Bugbot to run automatically on PRs to `master` branch
 
 ### Agent Configuration
 ```yaml
@@ -143,18 +126,19 @@ enabled: true
 ```
 
 ## Environment Variables
-No additional environment variables required. Bugbot is configured via GitHub integration.
+No additional environment variables required. Bugbot is configured via GitHub App integration.
 
 ## Integration with Other Agents
 
-### Interaction with Reviewer Agent
-- **Reviewer Agent** (Gemini): Reviews during pre-push on feature branches
-- **Code Reviewer Agent** (Bugbot): Reviews PRs targeting master
+### Interaction with Reviewer Agent (Gemini)
+- **Reviewer Agent** (Gemini): Reviews during pre-push on feature branches AND via GitHub Actions when merging to `development`
+- **Code Reviewer Agent** (Bugbot): Reviews PRs from `development` to `master`
 
 This provides defense-in-depth:
-1. Feature branch: Gemini review with auto-fix
-2. PR to master: Bugbot independent review
-3. Both catch different types of issues
+1. Feature branch: Local Gemini review with auto-fix (pre-push hook)
+2. Development PR: Remote Gemini review via GitHub Actions
+3. Master PR: Bugbot independent review via Cursor integration
+4. Each layer catches different types of issues
 
 ### Interaction with Builder Agent
 - Builder Agent should address Bugbot's feedback
@@ -168,7 +152,7 @@ This provides defense-in-depth:
 2. **Fix**: Address the issue in code
 3. **Verify**: Ensure fix resolves the concern
 4. **Reply**: Comment back explaining the fix
-5. **Request Re-review**: Ask Bugbot to review again if needed
+5. **Update PR**: Push fixes to `development` branch to update the PR
 
 ### When You Disagree
 1. **Explain**: Provide reasoning why you disagree
@@ -187,7 +171,7 @@ This provides defense-in-depth:
 
 ### Automatic Re-review
 Bugbot automatically reviews when:
-- New commits are pushed to the PR
+- New commits are pushed to `development` (PR updates automatically)
 - PR is updated
 
 ### Manual Re-review
@@ -206,27 +190,40 @@ or
 
 ### Initial Review
 - Triggered: When PR opens to master
-- Completes: Usually within 1-5 minutes
+- Completes: Usually within 1-10 minutes
 - Output: Review comments posted on PR
 
 ### Follow-up Review
-- Triggered: When new commits pushed
-- Completes: Usually within 1-5 minutes
+- Triggered: When new commits pushed to `development`
+- Completes: Usually within 1-10 minutes
 - Output: New review comments or updates
+
+## Merging Workflow (Development to Master)
+
+1. Create PR from `development` to `master`
+2. Wait for Bugbot review (up to 10 minutes)
+3. **If issues are found**:
+   - Fix issues in `development` branch
+   - Push fixes to `development`
+   - PR updates automatically
+   - Bugbot reviews updated PR
+   - No need to re-trigger manually
+4. **If Bugbot fails** (usage limits, errors, unresponsive):
+   - After 10 minutes, assistant may proceed with merge if review cannot be obtained
+5. Merge PR to `master`
 
 ## Blocking Behavior
 
-Unlike the pre-push hook with Gemini:
-- Bugbot does NOT block merging
-- Bugbot provides feedback but leaves decisions to maintainers
+- Bugbot provides feedback but does NOT enforce blocking
 - Maintainers should consider Bugbot's feedback seriously
 - Critical issues should be addressed before merge
+- The template relies on developer discipline to review and address findings
 
 ## Related Skills
-No direct skill integration. Bugbot runs automatically via GitHub workflow.
+No direct skill integration. Bugbot runs automatically via GitHub App.
 
 ## Related Agents
-- **Reviewer Agent** (Gemini): Pre-push reviews on feature branches
+- **Reviewer Agent** (Gemini): Pre-push reviews and development PR reviews
 - **Builder Agent**: Fixes issues identified by Bugbot
 - **Planner Agent**: Creates designs that Bugbot reviews
 
@@ -234,23 +231,23 @@ No direct skill integration. Bugbot runs automatically via GitHub workflow.
 
 When setting up a new repository:
 
-1. ✅ Add `.github/workflows/bugbot-master-only.yml`
-2. ✅ Enable Bugbot in Cursor settings for the repo
-3. ✅ Configure Bugbot to run only when mentioned
-4. ✅ Verify workflow triggers correctly
-5. ✅ Test by opening a PR to master
+1. ✅ Install Bugbot from https://cursor.com/bugbot
+2. ✅ Grant Bugbot permissions to your GitHub repository
+3. ✅ Configure Bugbot to run on PRs to `master`
+4. ✅ Test by opening a PR from `development` to `master`
+5. ✅ Verify Bugbot reviews are posting correctly
 
 ## Troubleshooting
 
 ### Bugbot Not Triggering
-- Check workflow file exists and is correct
+- Verify Bugbot is installed for the repository
+- Check GitHub App permissions in repository settings
 - Verify PR is targeting `master` branch
-- Check workflow logs in Actions tab
-- Ensure Bugbot is enabled for repository
+- Check if Bugbot service is operational
 
 ### Bugbot Review is Incomplete
 - Check if PR is very large (Bugbot may timeout)
-- Trigger re-review manually with `/bugbot run`
+- Trigger re-review manually with `@bugbot run`
 - Split large PR into smaller pieces
 
 ### False Positives

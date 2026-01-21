@@ -192,11 +192,14 @@ trigger: pr_to_master
 ### Implementation Phase
 1. **Planner Agent** creates execution plan → **Builder Agent** implements tasks
 
-### Review Phase
-1. **Builder Agent** completes work → **Reviewer Agent** reviews changes → **Builder Agent** auto-fixes findings
+### Feature Branch Review Phase (Local)
+1. **Builder Agent** completes work → Pre-push hook runs → **Reviewer Agent** (Gemini) reviews changes → **Builder Agent** auto-fixes findings
 
-### PR Review Phase
-1. Developer creates PR to master → **Code Reviewer Agent** (Bugbot) reviews PR
+### Development PR Review Phase (Remote)
+1. Developer creates PR from feature to development → **Reviewer Agent** (Gemini, via GitHub Actions) reviews PR → Developer fixes issues if found
+
+### Master PR Review Phase (Remote)
+1. Developer creates PR from development to master → **Code Reviewer Agent** (Bugbot, via Cursor) reviews PR → Developer fixes issues if found
 
 ---
 

@@ -358,6 +358,82 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 
 ---
 
+### 6. update-template
+
+**Purpose**: Sync agent and skill definitions from the original power_template repository.
+
+**When to Use**:
+- When the power_template repository has been updated with new agent instructions
+- When skill definitions have been improved in the template
+- When you want to apply fixes or improvements to agent behaviors
+- After a significant period of development when template may have evolved
+- When starting work on a new feature and want to ensure agents have latest instructions
+
+**Workflow**:
+
+1. **Validate Project**
+   - Check that current directory is a valid power_template project
+   - Verify `.opencode/` directory exists
+   - Verify `.opencode/agents/` and `.opencode/skills/` exist
+   - Confirm `scripts/sync-template.sh` exists
+
+2. **Run Sync Script**
+   - Execute `./scripts/sync-template.sh`
+   - The script will:
+     - Clone/update the original template repository
+     - Compare agent files (builder, planner, reviewer, web-searcher, code-reviewer)
+     - Compare skill files (execute-plan, init-project, fix-review-issues, update-stack-config, detect-stack)
+     - Show differences between current project and original template
+     - Prompt for confirmation before applying changes
+
+3. **Apply Updates**
+   - After user confirmation, copy updated files from template to project
+   - Only modify `.opencode/agents/` and `.opencode/skills/` directories
+   - Preserve existing files if no differences found
+
+4. **Commit Changes**
+   - Stage updated files: `git add .opencode/agents/ .opencode/skills/`
+   - Create commit with descriptive message
+   - Default message: "chore: sync agent and skill definitions with template"
+
+5. **Verify**
+   - Check git status to confirm only `.opencode/` files modified
+   - Verify project docs, code, and state untouched
+   - Report success to user
+
+**What Gets Updated**:
+- `.opencode/agents/builder.md`
+- `.opencode/agents/planner.md`
+- `.opencode/agents/reviewer.md`
+- `.opencode/agents/web-searcher.md`
+- `.opencode/agents/code-reviewer.md`
+- `.opencode/skills/execute-plan/SKILL.md`
+- `.opencode/skills/init-project/SKILL.md`
+- `.opencode/skills/fix-review-issues/SKILL.md`
+- `.opencode/skills/update-stack-config/SKILL.md`
+- `.opencode/skills/detect-stack/SKILL.md`
+
+**What Does NOT Get Updated**:
+- `docs/technical-design.md` - your project's technical design
+- `docs/execution-plan.md` - your project's execution plan
+- `.operational/` - your project state and TODOs
+- Your source code (src/, lib/, etc.)
+- Configuration files specific to your project
+
+**Usage**:
+```
+/update-template
+```
+
+**Options**:
+- `--project <path>`: Specify path to power_template project (default: current directory)
+
+**Environment Variables**:
+- `PROJECT_DIR`: Path to power_template project (overrides auto-detection)
+- `SKIP_COMMIT`: Set to "1" to skip git commit after sync
+
+---
+
 ## Skill Development
 
 ### Creating a New Skill

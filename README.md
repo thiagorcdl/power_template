@@ -8,6 +8,7 @@ A framework-agnostic AI-assisted software development template that uses:
 - **Bugbot** for PR reviews targeting `master` branch
 - Domain-specific agents for specialized tasks
 - Git hooks for automated quality checks
+- **GitFlow branching**: `master` (production), `development` (staging), `feature/*` (work)
 
 This repo is meant to be used as a **GitHub Template Repository**.
 
@@ -15,10 +16,12 @@ This repo is meant to be used as a **GitHub Template Repository**.
 
 ## What This Template Enforces
 
+- **GitFlow branching model** with `master`, `development`, and `feature/*` branches
 - **Commit-time linting** (pre-commit hook runs `./scripts/lint.sh`)
 - **Push-time tests + review** on feature branches (pre-push runs `./scripts/test.sh` and automated review with auto-fix)
 - **CI parity**: GitHub Actions runs `./scripts/check.sh`
-- **Bugbot only on PRs targeting `master`** (workflow triggers review automatically)
+- **Gemini review** on merge to `development` (via GitHub Actions)
+- **Bugbot review** on merge to `master` (via Cursor integration)
 - **Stack detection**: Automatically detects languages/frameworks and configures lint/test accordingly
 
 **Important**: `scripts/lint.sh` and `scripts/test.sh` are **dynamic** based on detected stack. The template automatically configures appropriate commands for your chosen stack.
@@ -65,7 +68,47 @@ export GITHUB_TOKEN="your-github-token-here"
 - **Gemini**: https://ai.google.dev/
 - **GitHub Token**: https://github.com/settings/tokens (generate with `repo` scope)
 
-### 3. Create a New Project
+### 3. Configure Code Reviewers
+
+Before initializing your project, you need to configure the automated code reviewers.
+
+#### Configure Cursor's Bugbot
+
+1. Go to https://cursor.com/bugbot
+2. Sign in with your Cursor account
+3. Click "Get Bugbot" or "Install Bugbot"
+4. Select your GitHub repositories where you want to use Bugbot
+5. Grant Bugbot the necessary permissions:
+   - Read pull requests
+   - Create pull request reviews
+   - Post comments on pull requests
+6. Configure Bugbot settings:
+   - Set to run on all PRs to `master` branch
+   - Enable automatic triggering on PR creation/update
+7. Test the installation by opening a PR to `master` (Bugbot should review it)
+
+#### Configure Google's Gemini Code Reviewer
+
+1. Go to GitHub Marketplace: https://github.com/marketplace/actions/gemini-ai-code-reviewer
+2. Click "Use latest version"
+3. Select your GitHub repository
+4. Add the required GitHub Action secrets:
+   ```bash
+   gh secret set GEMINI_API_KEY -b "your-gemini-api-key"
+   ```
+5. The workflow `.github/workflows/gemini-review.yml` will be added automatically
+6. Configure the workflow to trigger on PRs targeting `development` branch:
+   ```yaml
+   on:
+     pull_request:
+       branches: [development]
+   ```
+
+**Note**: If you prefer using a different Gemini code reviewer, check the GitHub Marketplace for options like:
+- `gemini-ai-code-reviewer` (truongnh1992)
+- `code-review-by-gemini-ai`
+
+### 4. Create a New Project
 
 Create repo from template
 ```bash
@@ -143,13 +186,25 @@ The template uses specialized agents for different tasks:
 
 ## Day-to-Day Usage
 
+### GitFlow Branching Workflow
+
+This template uses a GitFlow branching model:
+
+| Branch | Purpose | Review Triggered |
+|--------|---------|------------------|
+| `master` | Production-ready code | Bugbot (via Cursor) |
+| `development` | Integration/staging branch | Gemini (via GitHub Actions) |
+| `feature/*` | Feature development branches | None (pre-push hook) |
+
 ### Creating a Feature Branch
 
 ```bash
-git checkout master
-git pull origin master
+git checkout development
+git pull origin development
 git checkout -b feature/my-change
 ```
+
+**Note**: Always branch from `development`, not `master`.
 
 ### Implementing Changes
 
@@ -172,7 +227,7 @@ git add -A
 git commit -m "Implement X"
 ```
 
-If linting fails, the commit is blocked—fix linting and retry.
+If linting fails, commit is blocked—fix linting and retry.
 
 ### Pushing (Automated Review & Auto-Fix)
 
@@ -182,7 +237,7 @@ git push -u origin feature/my-change
 
 The pre-push hook will:
 1. Run tests
-2. Get diff from master
+2. Get diff from development
 3. Request review from Reviewer agent (Gemini)
 4. **Automatically fix findings** using Builder agent
 5. Commit fixes to the same commit (amend)
@@ -193,13 +248,43 @@ The pre-push hook will:
 ALLOW_P0=1 git push
 ```
 
-### Creating PR to Master
+### Merging Feature to Development
 
 ```bash
-gh pr create --base master --title "My feature" --body "Description"
+gh pr create --base development --title "My feature" --body "Description"
 ```
 
-Bugbot will automatically review the PR.
+**Workflow when merging to `development`**:
+1. Create PR from feature branch to `development`
+2. Wait for **Gemini code review** (GitHub Action triggers automatically)
+3. Review will complete within 10 minutes
+4. **If issues are found**:
+   - Fix the issues locally
+   - Push fixes to the same branch
+   - Gemini will review the updated PR automatically
+   - No need to re-trigger Gemini manually
+5. **If Gemini fails** (usage limits, errors, unresponsive):
+   - The assistant may merge after 10 minutes if no review is received
+6. Merge the PR to `development`
+
+### Merging Development to Master
+
+```bash
+gh pr create --base master --head development --title "Release vX.X.X" --body "Release notes"
+```
+
+**Workflow when merging to `master`**:
+1. Create PR from `development` to `master`
+2. Wait for **Bugbot review** (Cursor integration triggers automatically)
+3. Review will complete within 10 minutes
+4. **If issues are found**:
+   - Fix the issues in the `development` branch
+   - Push fixes to `development`
+   - The PR will update automatically
+   - Bugbot will review the updated PR
+5. **If Bugbot fails** (usage limits, errors, unresponsive):
+   - The assistant may merge after 10 minutes if no review is received
+6. Merge the PR to `master`
 
 ---
 
@@ -248,7 +333,7 @@ power_template/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                    # CI pipeline
-│       └── bugbot-master-only.yml     # Bugbot trigger
+│       └── gemini-review.yml         # Gemini review on PR to development
 ├── .githooks/
 │   ├── pre-commit                    # Lint on commit
 │   └── pre-push                     # Test + review on push
@@ -288,7 +373,7 @@ power_template/
 |----------|---------|----------|
 | `ALLOW_P0` | Override P0 blocking on push | `0` |
 | `BOOTSTRAP` | Skip hooks during initial setup | `0` |
-| `BASE_BRANCH` | Base branch for diffing | `master` |
+| `BASE_BRANCH` | Base branch for diffing | `development` |
 
 ---
 
@@ -340,8 +425,8 @@ Patterns for detecting languages and frameworks.
 
 ### 1. Two-Model System
 - **Builder Agent** (GLM-4.7): Writes code and implements features
-- **Reviewer Agent** (Gemini): Reviews code during pre-push
-- **Code Reviewer Agent** (Bugbot): Reviews PRs to master
+- **Reviewer Agent** (Gemini): Reviews code during pre-push and via GitHub Actions
+- **Code Reviewer Agent** (Bugbot): Reviews PRs from development to master
 
 ### 2. Auto-Fix on Push
 Review findings are automatically fixed:
@@ -351,8 +436,9 @@ Review findings are automatically fixed:
 - Push only blocks if P0 issues can't be fixed
 
 ### 3. Defense in Depth
-- Feature branch: Review with auto-fix during pre-push
-- PR to master: Bugbot review for final check
+- Feature branch: Local Gemini review with auto-fix during pre-push
+- PR to development: Remote Gemini review via GitHub Actions
+- PR to master: Bugbot review for final production check
 - CI: Runs all checks in parallel
 
 ---

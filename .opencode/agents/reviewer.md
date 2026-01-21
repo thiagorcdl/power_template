@@ -17,7 +17,8 @@ Reviews code changes and identifies potential issues to maintain code quality an
 - Ensure code quality standards are met
 
 ## When Used
-- During pre-push hook (automatic)
+- During pre-push hook (automatic) on feature branches
+- During GitHub Actions when PR is opened to development
 - During code review requests
 - Before merging to master
 - During `/fix-review-issues` skill
