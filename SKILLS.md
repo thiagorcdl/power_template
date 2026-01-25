@@ -26,6 +26,7 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
   - `OPENROUTER_API_KEY` (for GLM4.5 Air and Gemini2.0)
   - `GEMINI_API_KEY` (for web searching)
   - `GITHUB_TOKEN` (for repo creation and issue management)
+- Load default configuration from `opencode/default-config.json`
 - If missing, guide user to set them in environment
 - Verify GitHub authentication with `gh auth status`
 - Update `todo-checklist.md` to mark Phase 1 complete

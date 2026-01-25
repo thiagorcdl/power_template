@@ -1,0 +1,72 @@
+{
+  "agents": {
+    "planner": {
+      "name": "Planner Agent",
+      "model": "z-ai/glm-4.5-air:free",
+      "fallback": "google/gemini-2.0-flash-exp:free",
+      "role": ["planning", "design"],
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "description": "Creates technical design documents and execution plans for software projects."
+    },
+    "builder": {
+      "name": "Builder Agent",
+      "model": "z-ai/glm-4.5-air:free",
+      "fallback": "google/gemini-2.0-flash-exp:free",
+      "role": ["building", "implementation", "testing"],
+      "temperature": 0.5,
+      "max_tokens": 4000,
+      "description": "Implements features, fixes issues, writes tests, and applies fixes."
+    },
+    "reviewer": {
+      "name": "Reviewer Agent",
+      "model": "google/gemini-2.0-flash-exp:free",
+      "role": ["reviewing", "quality assurance"],
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "focus": ["security", "correctness", "testing", "architecture"],
+      "description": "Reviews code changes and identifies potential issues."
+    },
+    "web_searcher": {
+      "name": "Web Searcher Agent",
+      "model": "google/gemini-2.0-flash-exp:free",
+      "role": ["research", "documentation"],
+      "temperature": 0.4,
+      "max_tokens": 3000,
+      "tools": ["web_search", "webfetch"],
+      "description": "Finds documentation, examples, and best practices."
+    },
+    "code_reviewer": {
+      "name": "Code Reviewer Agent",
+      "provider": "bugbot",
+      "role": ["pr_review"],
+      "trigger": "pr_to_master",
+      "description": "Reviews pull requests against the master branch."
+    }
+  },
+  "providers": {
+    "openrouter": {
+      "name": "OpenRouter",
+      "api_key_env": "OPENROUTER_API_KEY",
+      "priority": 1
+    },
+    "gemini": {
+      "name": "Gemini",
+      "api_key_env": "GEMINI_API_KEY",
+      "priority": 2
+    },
+    "bugbot": {
+      "name": "Bugbot",
+      "provider": "bugbot",
+      "priority": 3
+    }
+  },
+  "defaults": {
+    "primary_model": "z-ai/glm-4.5-air:free",
+    "fallback_model": "google/gemini-2.0-flash-exp:free",
+    "reviewer_model": "google/gemini-2.0-flash-exp:free"
+  },
+  "version": "1.0.0",
+  "last_updated": "2026-01-25",
+  "description": "Default opencode + OpenRouter configuration using GLM 4.5 Air (free tier)"
+}

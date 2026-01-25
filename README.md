@@ -380,11 +380,12 @@ power_template/
 ## Configuration Files
 
 ### `.git/opencode`
-Main opencode configuration with:
-- Model configurations (GLM-4.7, Gemini2.0, Gemini)
+ Main opencode configuration with:
+- Model configurations (GLM-4.5 Air, Gemini2.0, Gemini)
 - Agent configurations
 - Skill configurations
 - Stack detection rules
+- Default configuration is available in `opencode/default-config.json`
 
 ### `.opencode/config/stack.json`
 Detected stack configuration:
@@ -424,7 +425,7 @@ Patterns for detecting languages and frameworks.
 ## Code Quality Workflow
 
 ### 1. Two-Model System
-- **Builder Agent** (GLM-4.7): Writes code and implements features
+- **Builder Agent** (GLM-4.5 Air): Writes code and implements features
 - **Reviewer Agent** (Gemini): Reviews code during pre-push and via GitHub Actions
 - **Code Reviewer Agent** (Bugbot): Reviews PRs from development to master
 
