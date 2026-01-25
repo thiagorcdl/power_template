@@ -74,8 +74,23 @@ Use Planner Agent to create `docs/technical-design.md` with:
 - API design
 - Security considerations
 - Deployment strategy
+- Define subsystem boundaries (e.g., frontend, backend, api, database, infrastructure)
 
-#### 2.3 Create Execution Plan
+#### 2.3 Initialize Version Tracking
+Use Planner Agent to initialize subsystem version tracking:
+- Create `docs/versions.md` with all subsystems tracked
+- Determine appropriate version file location for each subsystem:
+  - JavaScript/TypeScript: Use `package.json` version field
+  - Python: Use `pyproject.toml` or `__version__.py`
+  - Java: Use `pom.xml` or `build.gradle`
+  - Go: Use module version or create `version.go`
+  - API: Use `openapi.yaml` info.version field
+  - Database: Create `migrations/version.json`
+  - Infrastructure: Create `terraform/version.json` or similar
+- Initialize all subsystems to version 1.0.0 in their respective locations
+- Create version files where needed (e.g., `api/version.json`, `migrations/version.json`)
+
+#### 2.4 Create Execution Plan
 Use Planner Agent to create `docs/execution-plan.md` with:
 - Task list with priorities
 - Dependencies
@@ -129,7 +144,11 @@ Replace the template README with project-specific content.
 Commit the initial setup:
 ```bash
 git add -A
-git commit -m "chore: initialize project with [project-name]"
+git commit -m "chore: initialize project with [project-name]
+
+- Set up operational state tracking
+- Create technical design and execution plan
+- Initialize subsystem version tracking
 ```
 
 #### 4.3 Push to Remote
@@ -149,7 +168,7 @@ Or with shorter command:
 ```
 
 ## Required Environment Variables
-- `OPENROUTER_API_KEY` - For GLM4.7 and Qwen3 models
+- `OPENROUTER_API_KEY` - For GLM4.5 Air and Gemini2.0 models
 - `GEMINI_API_KEY` - For web searching and documentation
 - `GITHUB_TOKEN` - For repository creation and issue management
 

@@ -93,9 +93,18 @@ git checkout -b feature/task-$TASK_ID
 ##### C. Implement Task
 Use Builder Agent to implement:
 1. Analyze requirements
-2. Implement code changes
-3. Write appropriate tests
-4. Update documentation if needed
+2. Read current subsystem versions from their respective project directories
+3. Implement code changes
+4. Determine version increment based on changes:
+   - Patch version (a.b.➕c) for bug fixes and small improvements
+   - Minor version (a.➕b.c) for new features
+   - Major version (➕a.b.c) for breaking changes (recommend to user)
+5. Write appropriate tests
+6. Update documentation if needed
+7. Update subsystem versions:
+   - Update version file in each subsystem directory (e.g., `package.json`, `pyproject.toml`, `version.json`)
+   - Update `docs/versions.md` with version changes
+   - Record task ID and commit SHA in commit message
 
 ##### D. Run Linting
 ```bash
@@ -122,6 +131,13 @@ Check each criterion:
 - [ ] Criterion 1 met
 - [ ] Criterion 2 met
 - [ ] Criterion 3 met
+- [ ] Subsystem versions updated correctly
+
+Verify version updates:
+- Check version files in subsystem directories were updated
+- Check `docs/versions.md` was synchronized
+- Verify version increment matches changes made
+- Ensure version files are committed with changes
 
 If any criterion not met:
 - Builder Agent addresses missing items
@@ -155,6 +171,7 @@ Changes:
 - Added: src/models/user.ts
 - Modified: src/services/auth-service.ts
 - Tests: Added tests for auth module
+- Versions: Updated api/openapi.yaml to 1.1.0, backend/package.json to 1.1.0
 ```
 
 **Incremental commit strategy**:
@@ -185,6 +202,10 @@ gh pr create --base master \
 - [List of key changes]
 - [New files]
 - [Modified files]
+
+## Version Updates
+- [Subsystem 1]: a.b.c → new.a.b.c (reason)
+- [Subsystem 2]: a.b.c → new.a.b.c (reason)
 
 ## Task Completion
 - Addresses: #$ISSUE_NUMBER
@@ -508,6 +529,10 @@ Attempt 3: [Expanded approach, outcome]
 9. ✅ Feature branches created for each task
 10. ✅ Pull requests linked to GitHub issues
 11. ✅ Agent attempted to self-unblock 3 times before asking for human intervention
+12. ✅ Subsystem versions updated correctly for each task
+13. ✅ Version files updated in subsystem directories
+14. ✅ `docs/versions.md` synchronized with project changes
+15. ✅ Version increments match impact of changes made
 
 ## Feature Branch Strategy
 

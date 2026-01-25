@@ -4,7 +4,7 @@
 Finds documentation, examples, and best practices to support planning, building, and reviewing activities.
 
 ## Model Configuration
-- **Primary**: Gemini 2.5 Pro
+- **Primary**: Gemini 2.0 Flash
 - **Temperature**: 0.4 (moderate for comprehensive search results)
 
 ## Responsibilities
@@ -180,7 +180,7 @@ Always provide accurate, up-to-date information with clear sources. When possibl
 ## Configuration
 ```yaml
 agent: web_searcher
-model: gemini-2.5-pro
+model: google/gemini-2.0-flash-exp:free
 role: [research, documentation]
 temperature: 0.4
 tools: [web_search, webfetch]

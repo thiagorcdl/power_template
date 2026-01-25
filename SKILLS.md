@@ -23,7 +23,7 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 #### Phase 1: Setup
 - **Create `.operational/` directory** with `todo-checklist.md` containing all phases
 - Check for required API keys:
-  - `OPENROUTER_API_KEY` (for GLM4.7 and Qwen3)
+  - `OPENROUTER_API_KEY` (for GLM4.5 Air and Gemini2.0)
   - `GEMINI_API_KEY` (for web searching)
   - `GITHUB_TOKEN` (for repo creation and issue management)
 - If missing, guide user to set them in environment

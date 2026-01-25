@@ -3,7 +3,7 @@
 A framework-agnostic AI-assisted software development template that uses:
 
 - **opencode** as the AI assistant framework
-- **OpenRouter** with **GLM-4.7** (primary) and **Qwen3** (fallback) for planning and building
+- **OpenRouter** with **GLM-4.7** (primary) and **Gemini2.0** (fallback) for planning and building
 - **Gemini** for web searching and code reviews
 - **Bugbot** for PR reviews targeting `master` branch
 - Domain-specific agents for specialized tasks
@@ -166,10 +166,10 @@ The template uses specialized agents for different tasks:
 
 | Agent | Purpose | Model |
 |--------|---------|-------|
-| **Planner** | Creates technical designs and execution plans | GLM-4.7 (fallback: Qwen3) |
-| **Builder** | Implements features, writes tests, fixes issues | GLM-4.7 (fallback: Qwen3) |
-| **Reviewer** | Reviews code changes, identifies issues | Gemini 2.5 Pro |
-| **Web Searcher** | Finds documentation, examples, best practices | Gemini 2.5 Pro |
+| **Planner** | Creates technical designs and execution plans | GLM-4.7 (fallback: Gemini2.0) |
+| **Builder** | Implements features, writes tests, fixes issues | GLM-4.7 (fallback: Gemini2.0) |
+| **Reviewer** | Reviews code changes, identifies issues | Gemini 2.0 Flash |
+| **Web Searcher** | Finds documentation, examples, best practices | Gemini 2.0 Flash |
 | **Code Reviewer** | Reviews PRs to master | Bugbot |
 
 ### Available Skills
@@ -363,7 +363,7 @@ power_template/
 
 | Variable | Purpose | Source |
 |----------|---------|--------|
-| `OPENROUTER_API_KEY` | Access GLM-4.7 and Qwen3 models | https://openrouter.ai/keys |
+| `OPENROUTER_API_KEY` | Access GLM-4.7 and Gemini2.0 models | https://openrouter.ai/keys |
 | `GEMINI_API_KEY` | Access Gemini for web search/reviews | https://ai.google.dev/ |
 | `GITHUB_TOKEN` | Access GitHub API for repo/issues | https://github.com/settings/tokens |
 
@@ -381,7 +381,7 @@ power_template/
 
 ### `.git/opencode`
 Main opencode configuration with:
-- Model configurations (GLM-4.7, Qwen3, Gemini)
+- Model configurations (GLM-4.7, Gemini2.0, Gemini)
 - Agent configurations
 - Skill configurations
 - Stack detection rules

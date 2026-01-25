@@ -12,7 +12,7 @@ The Power Template uses a multi-agent system where each agent has specialized re
 
 **Purpose**: Creates technical design documents and execution plans.
 
-**Model**: GLM4.7 (primary) → Qwen3 (fallback)
+**Model**: GLM4.5 Air (primary) → Gemini2.0 (fallback)
 
 **Responsibilities**:
 - Analyze project requirements and constraints
@@ -21,6 +21,8 @@ The Power Template uses a multi-agent system where each agent has specialized re
 - Generate detailed execution plans with task breakdown
 - Identify dependencies between tasks
 - Assign priorities to tasks
+- Define initial subsystem versions during project initialization
+- Recommend version increments based on architectural changes
 
 **When Used**:
 - During project initialization (init-project skill)
@@ -31,8 +33,8 @@ The Power Template uses a multi-agent system where each agent has specialized re
 **Configuration**:
 ```yaml
 agent: planner
-model: glm-4.7
-fallback: qwen3
+model: z-ai/glm-4.5-air:free
+fallback: google/gemini-2.0-flash-exp:free
 role: [planning, design]
 temperature: 0.3
 ```
@@ -43,7 +45,7 @@ temperature: 0.3
 
 **Purpose**: Implements features, fixes issues, writes tests, and applies fixes.
 
-**Model**: GLM4.7 (primary) → Qwen3 (fallback)
+**Model**: GLM4.5 Air (primary) → Gemini2.0 (fallback)
 
 **Responsibilities**:
 - Write production code following best practices
@@ -54,6 +56,10 @@ temperature: 0.3
 - Apply fixes from review findings
 - Follow Stack Evolution rules
 - Attempt to self-unblock 3 times before asking for human intervention
+- Track and update subsystem versions based on changes made:
+  - Increment patch version (a.b.➕c) for bug fixes and small improvements
+  - Increment minor version (a.➕b.c) for new features
+  - Recommend major version (➕a.b.c) increments for breaking changes
 
 **When Used**:
 - During execute-plan skill
@@ -64,8 +70,8 @@ temperature: 0.3
 **Configuration**:
 ```yaml
 agent: builder
-model: glm-4.7
-fallback: qwen3
+model: z-ai/glm-4.5-air:free
+fallback: google/gemini-2.0-flash-exp:free
 role: [building, implementation, testing]
 temperature: 0.5
 ```
@@ -94,7 +100,7 @@ temperature: 0.5
 **Configuration**:
 ```yaml
 agent: reviewer
-model: gemini-2.5-pro
+model: google/gemini-2.0-flash-exp:free
 role: [reviewing, quality assurance]
 temperature: 0.2
 focus: [security, correctness, testing, architecture]
@@ -148,7 +154,7 @@ focus: [security, correctness, testing, architecture]
 **Configuration**:
 ```yaml
 agent: web_searcher
-model: gemini-2.5-pro
+model: google/gemini-2.0-flash-exp:free
 role: [research, documentation]
 temperature: 0.4
 tools: [web_search, webfetch]
@@ -207,20 +213,20 @@ trigger: pr_to_master
 
 ### OpenRouter Models
 
-**GLM4.7** (Primary Builder/Planner)
+**GLM4.5 Air** (Primary Builder/Planner)
 ```yaml
 provider: openrouter
-model: glm-4.7
+model: z-ai/glm-4.5-air:free
 api_key_env: OPENROUTER_API_KEY
 priority: 1
 max_tokens: 4000
 temperature: 0.5
 ```
 
-**Qwen3** (Fallback Builder/Planner)
+**Gemini2.0** (Fallback Builder/Planner)
 ```yaml
 provider: openrouter
-model: qwen3
+model: google/gemini-2.0-flash-exp:free
 api_key_env: OPENROUTER_API_KEY
 priority: 2
 max_tokens: 4000
@@ -229,10 +235,10 @@ temperature: 0.5
 
 ### Gemini Models
 
-**Gemini 2.5 Pro** (Reviewer/Web Searcher)
+**Gemini 2.0 Flash** (Reviewer/Web Searcher)
 ```yaml
 provider: gemini
-model: gemini-2.5-pro
+model: google/gemini-2.0-flash-exp:free
 api_key_env: GEMINI_API_KEY
 max_tokens: 3000
 temperature: 0.3
@@ -249,6 +255,251 @@ To add a new specialized agent:
 3. Update this AGENTS.md file with the new agent's documentation
 4. Configure the agent in `.git/opencode` if it needs model configuration
 5. Create skills that utilize the new agent
+
+---
+
+## Subsystem Version Tracking
+
+All agents MUST track versions of project subsystems using semantic versioning (a.b.c).
+
+**IMPORTANT**: Version files are stored in project directories, not in `.operational/`, making them versioned and visible to contributors and running software.
+
+### Version File Locations
+
+Each subsystem stores its version in its own directory:
+
+#### Common Patterns
+
+**Frontend (JavaScript/TypeScript)**
+```
+frontend/
+├── package.json          # version in "version" field
+├── VERSION.md            # Human-readable version history
+└── src/
+```
+
+**Backend (Node.js/Python/Java/etc.)**
+```
+backend/
+├── package.json          # or pyproject.toml, pom.xml, etc.
+├── VERSION.md            # Human-readable version history
+└── src/
+```
+
+**API**
+```
+api/
+├── version.json          # API version metadata
+├── openapi.yaml          # or swagger.json (version in info.version)
+└── endpoints/
+```
+
+**Database**
+```
+migrations/
+├── version.json          # Schema version tracking
+└── 20260101_initial_schema.sql
+```
+
+**Infrastructure**
+```
+terraform/ or ansible/
+├── version.json          # Infrastructure version
+└── modules/
+```
+
+### Central Version Tracking
+
+A centralized `docs/versions.md` tracks all subsystem versions for easy reference. This file should be created in the project's `docs/` directory during project initialization.
+
+```markdown
+# Subsystem Versions
+
+## Frontend
+- **Current Version**: 1.0.0
+- **Location**: `frontend/package.json`
+- **Last Updated**: 2026-01-25
+- **Last Change**: Initial version
+
+## Backend
+- **Current Version**: 1.0.0
+- **Location**: `backend/package.json`
+- **Last Updated**: 2026-01-25
+- **Last Change**: Initial version
+
+[...]
+```
+
+### Default Subsystems
+
+The system tracks these subsystems by default:
+1. **Frontend** - UI components, user-facing code
+2. **Backend** - Server-side logic, services
+3. **API** - API contracts, endpoints, schemas
+4. **Database** - Database schema, migrations
+5. **Infrastructure** - DevOps, CI/CD, deployment
+
+### Semantic Versioning Rules
+
+#### Major Version (a) - Breaking Changes
+- Breaking API contract changes
+- Removing deprecated features
+- Significant architectural changes
+- Database migrations requiring data migration
+
+#### Minor Version (b) - New Features
+- Adding new features
+- New API endpoints
+- New database tables/columns (backwards compatible)
+- New UI components
+
+#### Patch Version (c) - Bug Fixes
+- Bug fixes
+- Small improvements
+- Documentation updates
+- Performance optimizations
+- Refactoring without behavior changes
+
+### Version Update Workflow
+
+#### 1. Planner Agent (Project Initialization)
+- Identifies subsystems from technical design
+- Determines appropriate version file location for each subsystem:
+  - JavaScript/TypeScript: Use `package.json` version field
+  - Python: Use `pyproject.toml` or `__version__.py`
+  - Java: Use `pom.xml` or `build.gradle`
+  - Go: Use module version or create `version.go`
+  - API: Use `openapi.yaml` info.version field
+  - Database: Create `migrations/version.json`
+  - Infrastructure: Create `terraform/version.json` or similar
+- Creates `docs/versions.md` with all subsystems tracked
+- Initializes all subsystems to version 1.0.0
+
+#### 2. Builder Agent (During Implementation)
+- Reads current subsystem versions from their respective locations
+- Updates version after completing changes:
+  - Analyze impact of changes
+  - Determine appropriate version increment (major/minor/patch)
+  - Update version file in subsystem directory
+  - Update `docs/versions.md` for visibility
+  - Record task ID and commit SHA in commit message
+- Follows language-specific conventions:
+  - JavaScript/TypeScript: Update `package.json` version field
+  - Python: Update `pyproject.toml` version
+  - Java: Update `pom.xml` version
+  - etc.
+
+#### 3. Reviewer Agent (During Review)
+- Checks if version was updated appropriately for changes made
+- Verifies version increment matches impact of changes
+- Flags if breaking changes should trigger major version bump
+- Ensures version files are committed with code changes
+
+### Version File Formats by Subsystem Type
+
+#### Frontend/Backend (JavaScript/TypeScript - package.json)
+```json
+{
+  "name": "my-app",
+  "version": "1.1.0",
+  "description": "My application",
+  "scripts": { ... },
+  "dependencies": { ... }
+}
+```
+
+#### API (OpenAPI/Swagger)
+```yaml
+openapi: 3.0.0
+info:
+  title: My API
+  version: "1.2.0"
+  description: API description
+paths:
+  # ...
+```
+
+#### Database Migrations (version.json)
+```json
+{
+  "schema_version": "1.0.1",
+  "last_migration": "20260125_add_user_preferences",
+  "history": [
+    {
+      "version": "1.0.1",
+      "migration": "20260125_add_user_preferences",
+      "change": "Added user preferences table",
+      "timestamp": "2026-01-25T12:00:00Z",
+      "task_id": "TASK-005",
+      "commit": "abc123"
+    }
+  ]
+}
+```
+
+#### Infrastructure (version.json)
+```json
+{
+  "infrastructure_version": "1.0.0",
+  "last_updated": "2026-01-25T12:00:00Z",
+  "last_change": "Added CI/CD pipeline",
+  "history": [
+    {
+      "version": "1.0.0",
+      "change": "Initial infrastructure setup",
+      "timestamp": "2026-01-25T12:00:00Z"
+    }
+  ]
+}
+```
+
+### Version Increment Decision Tree
+
+```
+Is this a breaking change?
+├─ YES → Increment MAJOR (a.b.c → a+1.0.0)
+└─ NO → Does this add new functionality?
+    ├─ YES → Increment MINOR (a.b.c → a.b+1.0)
+    └─ NO → Is this a bug fix or small improvement?
+        ├─ YES → Increment PATCH (a.b.c → a.b.c+1)
+        └─ NO → No version increment needed
+```
+
+### Best Practices for Version Tracking
+
+1. **Store version in project directory** - Version files must be in the actual subsystem directory, not `.operational/`
+2. **Use language-specific conventions** - JavaScript uses `package.json`, Python uses `pyproject.toml`, etc.
+3. **Maintain central overview** - Keep `docs/versions.md` updated for visibility
+4. **Commit versions with code** - Version changes should be committed with the code that triggers them
+5. **Be specific in change descriptions** - Describe exactly what changed to justify the version increment
+6. **Link to task/commit** - Always include task ID and commit SHA in commit messages
+7. **Review version consistency** - Ensure version increment matches the scope of changes
+8. **Document breaking changes** - For major version bumps, clearly document what changed
+9. **Make versions machine-readable** - Software should be able to read version files
+10. **Keep history in docs** - Maintain version change history in `docs/versions.md`
+
+### Customizing Subsystems
+
+Projects can customize subsystems by:
+1. Adding new subsystems to `docs/versions.md`
+2. Creating appropriate version files in subsystem directories
+3. Updating project structure to include new subsystems
+
+Example custom subsystems:
+
+```markdown
+## Mobile App
+- **Current Version**: 1.0.0
+- **Location**: `mobile/Info.plist` (iOS) or `mobile/build.gradle` (Android)
+- **Last Updated**: 2026-01-25
+- **Last Change**: Initial version
+
+## ML Model
+- **Current Version**: 1.0.0
+- **Location**: `models/classifier/version.json`
+- **Last Updated**: 2026-01-25
+- **Last Change**: Initial model training
+```
 
 ---
 

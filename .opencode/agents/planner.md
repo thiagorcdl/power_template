@@ -4,8 +4,8 @@
 Creates technical design documents and execution plans for software projects.
 
 ## Model Configuration
-- **Primary**: GLM4.7 via OpenRouter
-- **Fallback**: Qwen3 via OpenRouter
+- **Primary**: GLM4.5 Air via OpenRouter
+- **Fallback**: Gemini2.0 via OpenRouter
 - **Temperature**: 0.3 (low for structured output)
 
 ## Responsibilities
@@ -108,8 +108,8 @@ Always provide structured, actionable output that other agents can execute.
 ## Configuration
 ```yaml
 agent: planner
-model: glm-4.7
-fallback: qwen3
+model: z-ai/glm-4.5-air:free
+fallback: google/gemini-2.0-flash-exp:free
 role: [planning, design]
 temperature: 0.3
 max_tokens: 4000

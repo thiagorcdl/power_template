@@ -4,8 +4,8 @@
 Implements features, fixes issues, writes tests, and applies changes following best practices.
 
 ## Model Configuration
-- **Primary**: GLM4.7 via OpenRouter
-- **Fallback**: Qwen3 via OpenRouter
+- **Primary**: GLM4.5 Air via OpenRouter
+- **Fallback**: Gemini2.0 via OpenRouter
 - **Temperature**: 0.5 (balanced for creativity and correctness)
 
 ## Responsibilities
@@ -154,8 +154,8 @@ Always run linting and testing after making changes. Fix any failures before fin
 ## Configuration
 ```yaml
 agent: builder
-model: glm-4.7
-fallback: qwen3
+model: z-ai/glm-4.5-air:free
+fallback: google/gemini-2.0-flash-exp:free
 role: [building, implementation, testing]
 temperature: 0.5
 max_tokens: 4000

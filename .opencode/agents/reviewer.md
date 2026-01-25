@@ -4,7 +4,7 @@
 Reviews code changes and identifies potential issues to maintain code quality and security.
 
 ## Model Configuration
-- **Primary**: Gemini 2.5 Pro
+- **Primary**: Gemini 2.0 Flash
 - **Temperature**: 0.2 (low for consistent, conservative reviews)
 
 ## Responsibilities
@@ -163,7 +163,7 @@ Be concrete. Avoid style-only nitpicks unless they create defects or security ri
 ## Configuration
 ```yaml
 agent: reviewer
-model: gemini-2.5-pro
+model: google/gemini-2.0-flash-exp:free
 role: [reviewing, quality assurance]
 temperature: 0.2
 focus: [security, correctness, testing, architecture]
