@@ -55,8 +55,12 @@ The script will:
 1. Clone/update the original template repository
 2. Compare agent files (builder, planner, reviewer, web-searcher, code-reviewer)
 3. Compare skill files (execute-plan, init-project, fix-review-issues, update-stack-config, detect-stack)
-4. Show differences between current project and original template
-5. Prompt for confirmation before applying changes
+4. Compare config files (opencode/default-config.json)
+5. Compare documentation files (AGENTS.md, README.md)
+6. Compare workflow files (.github/workflows/gemini-review.yml)
+7. Compare script files (scripts/sync-template.sh - detects its own updates!)
+8. Show differences between current project and original template
+9. Prompt for confirmation before applying changes
 
 #### 2.2 Show What Would Be Updated
 For each file with differences, show:
@@ -83,12 +87,17 @@ Commit message can be customized by user.
 
 ### Phase 4: Verify
 
-#### 4.1 Check Git Status
+4.1 Check Git Status
 ```bash
 git status
 ```
 
-Confirm that only `.opencode/agents/` and `.opencode/skills/` were modified.
+Confirm that these files were modified:
+- `.opencode/agents/` and `.opencode/skills/` (agent and skill definitions)
+- `opencode/default-config.json` (configuration)
+- `AGENTS.md` and `README.md` (documentation)
+- `.github/workflows/` (workflows)
+- `scripts/sync-template.sh` (the sync script itself!)
 
 #### 4.2 Verify Files Not Affected
 Ensure these were NOT modified:
@@ -210,6 +219,19 @@ The following files are synced from the template:
 - `.opencode/skills/update-stack-config/SKILL.md`
 - `.opencode/skills/detect-stack/SKILL.md`
 
+### Config Files
+- `opencode/default-config.json`
+
+### Documentation Files
+- `AGENTS.md`
+- `README.md`
+
+### Workflow Files
+- `.github/workflows/gemini-review.yml`
+
+### Script Files
+- `scripts/sync-template.sh` (self-updating!)
+
 ## What Does NOT Get Updated
 
 These files are never modified by the sync:
@@ -218,7 +240,7 @@ These files are never modified by the sync:
 - `.operational/` - your project state and TODOs
 - Your source code (src/, lib/, etc.)
 - Configuration files specific to your project
-- Any files outside of `.opencode/agents/` and `.opencode/skills/`
+- Any files outside of the sync list (agents, skills, config, documentation, workflows, scripts)
 
 ## Example Session
 
@@ -240,12 +262,12 @@ Comparing Agent files...
   --- /tmp/power_template_original/.opencode/agents/builder.md
   +++ /home/user/project/.opencode/agents/builder.md
   @@ -50,6 +50,66 @@
-   - Follow project-specific style guides
-   - Use auto-formatters when available
-   
-  +## Self-Unblocking Strategy
-  +
-  +**CRITICAL**: Before asking for human intervention...
+    - Follow project-specific style guides
+    - Use auto-formatters when available
+    
+   +## Self-Unblocking Strategy
+   +
+   +**CRITICAL**: Before asking for human intervention...
 
   [SUCCESS] Already up to date: agents/planner.md
   [SUCCESS] Already up to date: agents/reviewer.md
@@ -256,6 +278,25 @@ Comparing Skill files...
   --- Differences for skills/execute-plan/SKILL.md ---
 
   [SUCCESS] Already up to date: skills/init-project/SKILL.md
+
+Comparing Config files...
+
+  [SUCCESS] Already up to date: opencode/default-config.json
+
+Comparing Documentation files...
+
+  [WARNING] Differences found: README.md
+  --- Differences for README.md ---
+
+Comparing Workflow files...
+
+  [SUCCESS] Already up to date: .github/workflows/gemini-review.yml
+
+Comparing Script files...
+
+  [WARNING] Differences found: scripts/sync-template.sh
+  --- Differences for scripts/sync-template.sh ---
+  [Self-update detected!]
 
 [Menu]
 1) Compare all files (dry run)
@@ -273,8 +314,14 @@ Updating Agent files...
 Updating Skill files...
   [SUCCESS] Updated: skills/execute-plan/SKILL.md
 
+Updating Documentation files...
+  [SUCCESS] Updated: README.md
+
+Updating Script files...
+  [SUCCESS] Updated: scripts/sync-template.sh (self-update!)
+
 Summary:
-  - Updated: 2 files
+  - Updated: 4 files
   - Created: 0 files
 
 Do you want to commit the changes? [y/N]: y
@@ -282,9 +329,11 @@ Checking git status...
 Changes to be committed:
   modified:   .opencode/agents/builder.md
   modified:   .opencode/skills/execute-plan/SKILL.md
+  modified:   README.md
+  modified:   scripts/sync-template.sh
 
-Enter commit message [default: chore: sync agent and skill definitions with template]:
-chore: add self-unblocking strategy to builder and execute-plan
+Enter commit message [default: chore: sync template definitions and files]:
+chore: add self-unblocking strategy and update documentation
 
 [SUCCESS] Changes committed successfully
 
@@ -293,6 +342,8 @@ chore: add self-unblocking strategy to builder and execute-plan
 Updated files:
   - .opencode/agents/builder.md
   - .opencode/skills/execute-plan/SKILL.md
+  - README.md
+  - scripts/sync-template.sh (self-updated!)
 
 Your project now has the latest agent and skill definitions.
 Your work in docs/, .operational/, and source code is preserved.

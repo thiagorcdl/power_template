@@ -37,6 +37,23 @@ SKILL_FILES=(
     "skills/detect-stack/SKILL.md"
 )
 
+CONFIG_FILES=(
+    "opencode/default-config.json"
+)
+
+DOCUMENTATION_FILES=(
+    "AGENTS.md"
+    "README.md"
+)
+
+WORKFLOW_FILES=(
+    ".github/workflows/gemini-review.yml"
+)
+
+SCRIPT_FILES=(
+    "scripts/sync-template.sh"
+)
+
 # Function to print colored messages
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -195,22 +212,168 @@ commit_changes() {
     cd "$PROJECT_DIR"
 
     print_info "Checking git status..."
-    if git diff --quiet .opencode/ && git diff --cached --quiet .opencode/; then
+    local files_to_add=()
+
+    # Check .opencode/ files
+    if ! git diff --quiet .opencode/ || ! git diff --cached --quiet .opencode/; then
+        files_to_add+=(".opencode/")
+    fi
+
+    # Check opencode/ config files
+    if ! git diff --quiet opencode/ || ! git diff --cached --quiet opencode/; then
+        files_to_add+=("opencode/")
+    fi
+
+    # Check documentation files
+    if ! git diff --quiet AGENTS.md README.md || ! git diff --cached --quiet AGENTS.md README.md; then
+        files_to_add+=("AGENTS.md README.md")
+    fi
+
+    # Check workflow files
+    if ! git diff --quiet .github/ || ! git diff --cached --quiet .github/; then
+        files_to_add+=(".github/")
+    fi
+
+    # Check script files
+    if ! git diff --quiet scripts/sync-template.sh || ! git diff --cached --quiet scripts/sync-template.sh; then
+        files_to_add+=("scripts/sync-template.sh")
+    fi
+
+    if [ ${#files_to_add[@]} -eq 0 ]; then
         print_warning "No changes to commit"
         return 0
     fi
 
     print_info "Showing changes to be committed:"
-    git status --short .opencode/
+    for file in "${files_to_add[@]}"; do
+        git status --short $file
+    done
     echo ""
 
-    read -p "Enter commit message [default: chore: sync agent and skill definitions with template]: " commit_msg
-    commit_msg=${commit_msg:-"chore: sync agent and skill definitions with template"}
+    read -p "Enter commit message [default: chore: sync template definitions and files]: " commit_msg
+    commit_msg=${commit_msg:-"chore: sync template definitions and files"}
 
-    git add .opencode/
+    # Add all files
+    for file in "${files_to_add[@]}"; do
+        git add $file
+    done
+
     git commit -m "$commit_msg"
 
     print_success "Changes committed successfully"
+}
+
+# Function to compare files in project root
+compare_root_files() {
+    local file_type=$1
+    shift
+    local files=("$@")
+
+    echo ""
+    echo "========================================================================"
+    echo "  Comparing $file_type files"
+    echo "========================================================================"
+    echo ""
+
+    local has_diffs=0
+
+    for file in "${files[@]}"; do
+        local original_file="$TEMPLATE_DIR/$file"
+        local project_file="$PROJECT_DIR/$file"
+
+        if [ ! -f "$original_file" ]; then
+            print_warning "File not found in template: $file"
+            continue
+        fi
+
+        if [ ! -f "$project_file" ]; then
+            print_warning "File not found in project: $file (will be created)"
+            continue
+        fi
+
+        if diff -q "$original_file" "$project_file" > /dev/null 2>&1; then
+            print_success "Already up to date: $file"
+        else
+            print_warning "Differences found: $file"
+            has_diffs=1
+
+            # Show diff summary
+            echo -e "${YELLOW}--- Differences for $file ---${NC}"
+            diff -u "$original_file" "$project_file" | head -30 || true
+            echo -e "${YELLOW}--- (diff truncated, use full diff to see all) ---${NC}"
+            echo ""
+        fi
+    done
+
+    return $has_diffs
+}
+
+# Function to copy files in project root
+copy_root_files() {
+    local file_type=$1
+    shift
+    local files=("$@")
+
+    echo ""
+    echo "========================================================================"
+    echo "  Updating $file_type files"
+    echo "========================================================================"
+    echo ""
+
+    local copied_count=0
+    local created_count=0
+
+    for file in "${files[@]}"; do
+        local original_file="$TEMPLATE_DIR/$file"
+        local project_file="$PROJECT_DIR/$file"
+
+        if [ ! -f "$original_file" ]; then
+            print_warning "Skipping: $file (not found in template)"
+            continue
+        fi
+
+        local project_dir=$(dirname "$project_file")
+        mkdir -p "$project_dir"
+
+        if [ ! -f "$project_file" ]; then
+            cp "$original_file" "$project_file"
+            print_success "Created: $file"
+            ((created_count++))
+        else
+            if diff -q "$original_file" "$project_file" > /dev/null 2>&1; then
+                print_info "Skipped (already up to date): $file"
+            else
+                cp "$original_file" "$project_file"
+                print_success "Updated: $file"
+                ((copied_count++))
+            fi
+        fi
+    done
+
+    echo ""
+    print_info "$file_type summary:"
+    print_info "  - Updated: $copied_count files"
+    print_info "  - Created: $created_count files"
+}
+
+# Function to show full diff for a root file
+show_full_root_diff() {
+    local file=$1
+    local original_file="$TEMPLATE_DIR/$file"
+    local project_file="$PROJECT_DIR/$file"
+
+    if [ ! -f "$original_file" ]; then
+        print_error "File not found in template: $file"
+        return 1
+    fi
+
+    if [ ! -f "$project_file" ]; then
+        print_info "File will be created: $file"
+        cat "$original_file"
+    else
+        print_info "Showing full diff for: $file"
+        diff -u "$original_file" "$project_file" || true
+    fi
 }
 
 # Main menu function
@@ -233,18 +396,30 @@ show_menu() {
             setup_template
             compare_files "Agent" "${AGENT_FILES[@]}" || true
             compare_files "Skill" "${SKILL_FILES[@]}" || true
+            compare_root_files "Config" "${CONFIG_FILES[@]}" || true
+            compare_root_files "Documentation" "${DOCUMENTATION_FILES[@]}" || true
+            compare_root_files "Workflow" "${WORKFLOW_FILES[@]}" || true
+            compare_root_files "Script" "${SCRIPT_FILES[@]}" || true
             ;;
         2)
             setup_template
             compare_files "Agent" "${AGENT_FILES[@]}" || true
             compare_files "Skill" "${SKILL_FILES[@]}" || true
+            compare_root_files "Config" "${CONFIG_FILES[@]}" || true
+            compare_root_files "Documentation" "${DOCUMENTATION_FILES[@]}" || true
+            compare_root_files "Workflow" "${WORKFLOW_FILES[@]}" || true
+            compare_root_files "Script" "${SCRIPT_FILES[@]}" || true
             echo ""
-            read -p "Do you want to proceed with the updates? [y/N]: " confirm
+            read -p "Do you want to proceed with updates? [y/N]: " confirm
             if [[ $confirm =~ ^[Yy]$ ]]; then
                 copy_files "Agent" "${AGENT_FILES[@]}"
                 copy_files "Skill" "${SKILL_FILES[@]}"
+                copy_root_files "Config" "${CONFIG_FILES[@]}"
+                copy_root_files "Documentation" "${DOCUMENTATION_FILES[@]}"
+                copy_root_files "Workflow" "${WORKFLOW_FILES[@]}"
+                copy_root_files "Script" "${SCRIPT_FILES[@]}"
                 echo ""
-                read -p "Do you want to commit the changes? [y/N]: " commit_confirm
+                read -p "Do you want to commit changes? [y/N]: " commit_confirm
                 if [[ $commit_confirm =~ ^[Yy]$ ]]; then
                     commit_changes
                 fi
@@ -257,12 +432,37 @@ show_menu() {
             echo ""
             echo "Available files:"
             echo ""
-            for file in "${AGENT_FILES[@]}" "${SKILL_FILES[@]}"; do
-                echo "  - $file"
+            echo "  Agents:"
+            for file in "${AGENT_FILES[@]}"; do
+                echo "    - $file"
+            done
+            echo "  Skills:"
+            for file in "${SKILL_FILES[@]}"; do
+                echo "    - $file"
+            done
+            echo "  Config:"
+            for file in "${CONFIG_FILES[@]}"; do
+                echo "    - $file"
+            done
+            echo "  Documentation:"
+            for file in "${DOCUMENTATION_FILES[@]}"; do
+                echo "    - $file"
+            done
+            echo "  Workflow:"
+            for file in "${WORKFLOW_FILES[@]}"; do
+                echo "    - $file"
+            done
+            echo "  Scripts:"
+            for file in "${SCRIPT_FILES[@]}"; do
+                echo "    - $file"
             done
             echo ""
             read -p "Enter file path to show diff: " file_to_diff
-            show_full_diff "$file_to_diff"
+            if [[ $file_to_diff == .opencode/* ]]; then
+                show_full_diff "$file_to_diff"
+            else
+                show_full_root_diff "$file_to_diff"
+            fi
             ;;
         4)
             print_info "Exiting..."
