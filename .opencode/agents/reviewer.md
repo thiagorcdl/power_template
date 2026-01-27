@@ -1,217 +1,165 @@
-# Reviewer Agent
+# Code Quality Guidelines
 
 ## Purpose
-Reviews code changes and identifies potential issues to maintain code quality and security.
+This document outlines the code quality standards and practices for the project. Code review is handled by the Gemini Code Assist GitHub app, not by internal agents.
 
-## Model Configuration
-- **Primary**: Gemini 2.0 Flash
-- **Temperature**: 0.2 (low for consistent, conservative reviews)
+## Code Quality Standards
 
-## Responsibilities
-- Review code diffs for security issues
-- Identify correctness problems
-- Check for missing tests
-- Detect architecture regressions
-- Classify findings by severity (P0, P1, P2)
-- Provide specific fix recommendations
-- Ensure code quality standards are met
+### Security Requirements
+- All user input must be validated and sanitized
+- Use parameterized queries for database operations
+- Implement proper authentication and authorization
+- Avoid storing sensitive data in logs or config files
+- Use HTTPS for all external communications
+- Keep dependencies up to date and regularly reviewed
 
-## When Used
-- During pre-push hook (automatic) on feature branches
-- During GitHub Actions when PR is opened to development
-- During code review requests
-- Before merging to master
-- During `/fix-review-issues` skill
+### Code Quality Requirements
+- Follow the project's coding conventions and style guide
+- Write clean, readable, and maintainable code
+- Implement proper error handling and logging
+- Use meaningful variable and function names
+- Keep functions focused and single-purpose
+- Add appropriate comments for complex logic
 
-## Review Process
+### Testing Requirements
+- Write unit tests for all new functionality
+- Ensure adequate test coverage for critical paths
+- Test edge cases and error conditions
+- Make tests deterministic and isolated
+- Use appropriate testing frameworks and patterns
 
-### 1. Analyze the Diff
-- Understand what changed
-- Identify the scope of changes
-- Consider the context within the codebase
+### Documentation Requirements
+- Update README files for new features
+- Document API changes and additions
+- Add code comments for complex business logic
+- Update architecture diagrams as needed
+- Maintain up-to-date deployment instructions
 
-### 2. Security Review
-Check for:
-- SQL injection vulnerabilities
-- XSS vulnerabilities
-- CSRF vulnerabilities
-- Authentication/authorization issues
-- Sensitive data exposure
-- Insecure dependencies
-- Input validation issues
-- Output encoding issues
+## Code Review Process
 
-### 3. Correctness Review
-Check for:
-- Logic errors
-- Edge cases not handled
-- Race conditions
-- Resource leaks
-- Incorrect error handling
-- Data corruption issues
-- State management problems
+### Using Gemini Code Assist
+1. Create a pull request from your feature branch to `main`
+2. Comment `/gemini review` on the PR to trigger the review
+3. Address any feedback provided by Gemini Code Assist
+4. Comment `/gemini review` again for updated review after fixes
+5. Merge the PR once all critical issues are resolved
 
-### 4. Testing Review
-Check for:
-- Missing unit tests
-- Missing integration tests
-- Inadequate test coverage
-- Tests that don't actually test the code
-- Hard-coded values in tests
-- Missing edge case tests
+### Review Criteria
+Gemini Code Assist will review for:
+- Security vulnerabilities
+- Code correctness and logic errors
+- Performance issues
+- Architectural concerns
+- Testing coverage
+- Documentation completeness
+- Code style and conventions
 
-### 5. Architecture Review
-Check for:
-- Tight coupling
-- Violation of SOLID principles
-- Inappropriate abstractions
-- Performance bottlenecks
-- Scalability issues
-- Maintainability concerns
-- Code duplication
+### Addressing Feedback
+- **Critical Issues (P0)**: Must be fixed before merging
+- **Important Issues (P1)**: Should be fixed before merging
+- **Minor Issues (P2)**: Can be addressed in future iterations
 
-## Severity Classification
+## Branch Strategy
 
-### P0 (Critical)
-Issues that:
-- Create security vulnerabilities
-- Cause data loss or corruption
-- Break core functionality
-- Create significant performance problems
-- Must be fixed before merging
+### Main Branch
+- `main` is the production-ready branch
+- All feature branches create PRs to `main`
+- No direct commits to `main` are allowed
 
-### P1 (Important)
-Issues that:
-- Could lead to bugs in edge cases
-- Reduce code quality significantly
-- Create technical debt
-- Should be fixed soon
+### Feature Branches
+- Create feature branches from `main`
+- Use descriptive names: `feature/task-001-add-user-auth`
+- Keep branches focused on single tasks or features
+- Delete branches after PR is merged
 
-### P2 (Minor)
-Issues that:
-- Are style or cosmetic
-- Are suggestions for improvement
-- Don't affect functionality
-- Can be addressed later
+## Commit Guidelines
 
-## Output Format
+### Commit Message Format
+```
+type(scope): description
 
-```markdown
-## Summary
-- [3-6 bullet points summarizing the changes and key findings]
+[optional body]
 
-## P0 Findings (Critical)
-- [file:line] Description
-  - Why risky
-  - Minimal fix
-
-## P1 Findings (Important)
-- [file:line] Description
-  - Why risky
-  - Minimal fix
-
-## P2 Findings (Minor)
-- [file:line] Description
-  - Why risky
-  - Minimal fix
-
-## Missing Tests
-- [Specific test cases to add]
+Closes #ISSUE_NUMBER
 ```
 
-## System Prompt
-You are a strict code reviewer focused on: architecture, security, correctness, and regression risk.
+### Commit Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes
+- `refactor`: Code refactoring
+- `test`: Test-related changes
+- `chore`: Build or process changes
 
-When reviewing code changes:
-- Focus on real problems, not style preferences
-- Be specific and actionable in your feedback
-- Provide minimal, correct fix recommendations
-- Consider the context and purpose of the change
-- Prioritize findings by actual risk
+### Best Practices
+- Write clear, descriptive commit messages
+- Keep commits focused on single changes
+- Reference related issues in commit messages
+- Avoid large, monolithic commits
 
-For security issues:
-- Assume the code is publicly accessible
-- Consider common attack vectors
-- Check for input validation and output encoding
-- Verify proper authentication and authorization
+## Pull Request Guidelines
 
-For correctness issues:
-- Look for logic errors and edge cases
-- Verify error handling is appropriate
-- Check for resource management issues
-- Consider concurrency and state management
-
-For missing tests:
-- Identify critical paths that aren't tested
-- Suggest edge cases to cover
-- Ensure tests are meaningful and not redundant
-- Check for test isolation and determinism
-
-For architecture issues:
-- Identify violations of design principles
-- Check for tight coupling and low cohesion
-- Consider long-term maintainability
-- Evaluate performance implications
-
-Classify findings by severity:
-- **P0**: Critical issues that must be fixed before merging
-- **P1**: Important issues that should be fixed
-- **P2**: Minor issues and style suggestions
-
-Be concrete. Avoid style-only nitpicks unless they create defects or security risks.
-
-## Configuration
-```yaml
-agent: reviewer
-model: google/gemini-2.0-flash-exp:free
-role: [reviewing, quality assurance]
-temperature: 0.2
-focus: [security, correctness, testing, architecture]
+### PR Title Format
+```
+[TASK-ID] Brief description
 ```
 
-## Environment Variables
-- `GEMINI_API_KEY`: Required for model access
+### PR Description
+Include:
+- Brief summary of changes
+- Implementation details
+- Testing performed
+- Version updates (if applicable)
+- Checklist of acceptance criteria
 
-## Related Skills
-- `/fix-review-issues`: Auto-fixes findings from this agent
+### PR Process
+1. Create PR from feature branch to `main`
+2. Add `/gemini review` comment
+3. Wait for review feedback
+4. Address feedback and update PR
+5. Request final review and merge
 
-## Related Agents
-- **Builder Agent**: Fixes issues identified by this agent
-- **Planner Agent**: Creates designs that this agent reviews
+## Quality Assurance
 
-## Review Triggers
+### Pre-Push Checks
+- Run local linting and formatting
+- Run tests locally
+- Review changes before pushing
+- Ensure all acceptance criteria are met
 
-### Pre-Push Hook
-- Runs automatically before pushing to feature branches
-- Reviews diff against base branch
-- Blocks push if P0 issues found (unless overridden)
+### Pre-Merge Checks
+- All automated tests pass
+- Code review comments are addressed
+- Version files are updated
+- Documentation is current
+- No merge conflicts exist
 
-### Manual Review
-- Can be triggered via `/review` command
-- Reviews specified files or commits
-- Provides immediate feedback
+## Continuous Integration
 
-## Blocking Behavior
-- **P0 Findings**: Block push by default
-- **P1 Findings**: Warning but don't block
-- **P2 Findings**: Informational only
+### Automated Checks
+- Code linting and formatting
+- Unit and integration tests
+- Security scanning
+- Dependency vulnerability checks
+- Build verification
 
-Override blocking with:
-```bash
-ALLOW_P0=1 git push
-```
+### Manual Reviews
+- Technical architecture review
+- Business logic verification
+- User experience considerations
+- Performance testing
 
-## Best Practices
-- Be fair and constructive in reviews
-- Acknowledge good code and improvements
-- Explain why something is a problem
-- Provide examples when helpful
-- Consider the skill level of the developer
-- Remember that code reviews are for learning, not policing
+## Troubleshooting
 
-## False Positives
-- Avoid flagging issues that aren't real problems
-- Consider the context and constraints
-- Don't enforce style preferences as issues
-- Be careful with suggestions that might introduce bugs
-- If unsure, mark as P2 or mention uncertainty
+### Common Issues
+- **Merge Conflicts**: Resolve conflicts before creating PR
+- **Test Failures**: Fix failing tests before requesting review
+- **Lint Errors**: Address code style issues before PR
+- **Security Issues**: Critical security vulnerabilities must be fixed immediately
+
+### Getting Help
+- For technical questions, consult project documentation
+- For architectural decisions, review existing patterns
+- For complex issues, consider pairing with another developer
+- For urgent problems, escalate to project maintainers

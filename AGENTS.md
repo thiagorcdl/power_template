@@ -78,61 +78,7 @@ temperature: 0.5
 
 ---
 
-### 3. Reviewer Agent
-
-**Purpose**: Reviews code changes and identifies potential issues.
-
-**Model**: Gemini
-
-**Responsibilities**:
-- Review code diffs for security issues
-- Identify correctness problems
-- Check for missing tests
-- Detect architecture regressions
-- Classify findings by severity (P0, P1, P2)
-- Provide specific fix recommendations
-
-**When Used**:
-- During pre-push hook
-- During code review requests
-- Before merging to master
-
-**Configuration**:
-```yaml
-agent: reviewer
-model: google/gemini-2.0-flash-exp:free
-role: [reviewing, quality assurance]
-temperature: 0.2
-focus: [security, correctness, testing, architecture]
-```
-
-**Review Findings Format**:
-```markdown
-## Summary
-- 3-6 bullet points
-
-## P0 Findings (Critical)
-- [file:line] Description
-  - Why risky
-  - Minimal fix
-
-## P1 Findings (Important)
-- [file:line] Description
-  - Why risky
-  - Minimal fix
-
-## P2 Findings (Minor)
-- [file:line] Description
-  - Why risky
-  - Minimal fix
-
-## Missing Tests
-- Specific test cases to add
-```
-
----
-
-### 4. Web Searcher Agent
+### 3. Web Searcher Agent
 
 **Purpose**: Finds documentation, examples, and best practices.
 
@@ -148,7 +94,6 @@ focus: [security, correctness, testing, architecture]
 **When Used**:
 - When planner needs research
 - When builder needs implementation examples
-- When reviewer needs to verify patterns
 - During skill evolution
 
 **Configuration**:
@@ -162,34 +107,6 @@ tools: [web_search, webfetch]
 
 ---
 
-### 5. Code Reviewer Agent
-
-**Purpose**: Reviews pull requests against the master branch.
-
-**Model**: Bugbot
-
-**Responsibilities**:
-- Review PR changes
-- Identify potential bugs
-- Suggest improvements
-- Check for security issues
-- Ensure code quality standards
-
-**When Used**:
-- When PR is opened to master
-- When PR is updated targeting master
-- When explicitly triggered via comment
-
-**Configuration**:
-```yaml
-agent: code_reviewer
-provider: bugbot
-role: [pr_review]
-trigger: pr_to_master
-```
-
----
-
 ## Agent Interactions
 
 ### Planning Phase
@@ -199,13 +116,10 @@ trigger: pr_to_master
 1. **Planner Agent** creates execution plan → **Builder Agent** implements tasks
 
 ### Feature Branch Review Phase (Local)
-1. **Builder Agent** completes work → Pre-push hook runs → **Reviewer Agent** (Gemini) reviews changes → **Builder Agent** auto-fixes findings
+1. **Builder Agent** completes work → Pre-push hook runs → Code quality checks performed locally → **Builder Agent** auto-fixes findings
 
-### Development PR Review Phase (Remote)
-1. Developer creates PR from feature to development → **Reviewer Agent** (Gemini, via GitHub Actions) reviews PR → Developer fixes issues if found
-
-### Master PR Review Phase (Remote)
-1. Developer creates PR from development to master → **Code Reviewer Agent** (Bugbot, via Cursor) reviews PR → Developer fixes issues if found
+### Code Review Phase (Remote)
+1. Developer creates PR from feature to main → **Gemini Code Assist** (GitHub App) reviews PR when triggered with "/gemini review" → Developer addresses feedback as needed
 
 ---
 
@@ -235,7 +149,7 @@ temperature: 0.5
 
 ### Gemini Models
 
-**Gemini 2.0 Flash** (Reviewer/Web Searcher)
+**Gemini 2.0 Flash** (Web Searcher)
 ```yaml
 provider: gemini
 model: google/gemini-2.0-flash-exp:free
@@ -245,6 +159,26 @@ temperature: 0.3
 ```
 
 ---
+
+## Handling Dependent Tasks
+
+When working on a task that depends on another task with an open PR:
+
+1. **Check for Code Review Comments**
+   - Look for comments on the dependent PR
+   - Ignore the first comment from gemini-code-assist that starts with "Summary of Changes"
+   - Look for the comment from gemini-code-assist starting with "Code Review"
+
+2. **Review Findings**
+   - **If no critical issues found**: Merge the PR, update the current branch, and proceed with development
+   - **If critical changes requested**: Switch back to the PR's branch, fix the issue, update the PR, and merge (no need for re-review)
+   - **If non-critical issues found**: Create GitHub issues with matching priority, merge the PR, and proceed with development
+
+3. **GitHub Issue Creation for Low Priority Items**
+   - For low priority findings, create GitHub issues:
+     - Title: "Low Priority Issue: [description]"
+     - Body: Include file location, priority, description, fix suggestion, and PR link
+     - Link to the original PR for reference
 
 ## Adding New Agents
 
@@ -508,7 +442,6 @@ Example custom subsystems:
 - Each agent should have a single, well-defined purpose
 - Agents should be configured with appropriate temperature for their task
 - Fallback models should be specified for critical agents
-- Reviewer agents should use lower temperature for consistency
 - Builder agents should use moderate temperature for creativity
 - Planner agents should use lower temperature for structured output
 

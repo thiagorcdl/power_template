@@ -51,10 +51,10 @@ Select mode [1/2/3]:
 ```
 
 #### 2.2 Prepare Branch Management
-Ensure master is up to date:
+Ensure main is up to date:
 ```bash
-git checkout master
-git pull origin master
+git checkout main
+git pull origin main
 ```
 
 ### Phase 3: Execute Tasks (Feature Branch Workflow)
@@ -65,9 +65,9 @@ git pull origin master
 IMPORTANT: Create a separate feature branch for EACH task to enable pull requests and incremental reviews:
 
 ```bash
-# Ensure we start from master for each new task
-git checkout master
-git pull origin master
+# Ensure we start from main for each new task
+git checkout main
+git pull origin main
 
 # Create feature branch for this specific task
 git checkout -b feature/task-$TASK_ID
@@ -75,7 +75,7 @@ git checkout -b feature/task-$TASK_ID
 
 **Benefits of separate feature branches per task**:
 - Each task gets its own pull request
-- Enables parallel development of tasks
+- Enables parallel task execution
 - Easier code reviews
 - Cleaner git history
 - Reduces merge conflicts
@@ -84,6 +84,8 @@ git checkout -b feature/task-$TASK_ID
 - `feature/task-$TASK_ID` - For individual tasks
 - `feature/$TASK_ID-$SHORT_DESCRIPTION` - For descriptive names
 - `feature/$MILESTONE` - For milestone-based work
+
+**Target branch**: All PRs are created against the `main` branch
 
 ##### B. Read Task Details
 - Read from execution plan
@@ -189,7 +191,7 @@ git push -u origin feature/task-$TASK_ID
 After task is complete and pushed:
 
 ```bash
-gh pr create --base master \
+gh pr create --base main \
   --title "[TASK-$ID] $TASK_TITLE" \
   --body "$(cat <<'EOF'
 ## Summary
@@ -225,8 +227,18 @@ gh pr create --base master \
 
 ## Notes
 [Any additional notes or context]
+
+## Code Review
+/gemini review
 EOF
-)"
+)"`
+```
+
+##### J. Trigger Code Review
+Comment "/gemini review" on the created PR to trigger Gemini Code Assist review:
+
+```bash
+gh pr comment $PR_NUMBER --body "/gemini review"
 ```
 
 **PR creation strategy**:
@@ -235,12 +247,14 @@ EOF
 - Link to GitHub issue
 - Include implementation details and testing info
 - Add checklist for acceptance criteria
+- Include "/gemini review" comment to trigger code review
 
 **Benefits of immediate PR creation**:
 - Enables immediate review feedback
 - Faster iteration cycle
 - Prevents feature branch drift
 - Clearer audit trail
+- Automatic code review via Gemini Code Assist
 
 ##### J. Update GitHub Issue
 - Close issue with PR reference:
@@ -289,7 +303,7 @@ Ready to start? [Y/n]
 #### 5.2 Create Summary PR (Optional)
 After all tasks complete, create summary PR:
 ```bash
-gh pr create --base master \
+gh pr create --base main \
   --title "Complete implementation of [milestone/project]" \
   --body "$(cat <<'EOF'
 ## Summary
@@ -315,9 +329,9 @@ gh pr create --base master \
 - [x] All execution plan tasks completed
 - [x] All pull requests created
 - [x] All PRs reviewed
-- [x] Ready for merge to master
+- [x] Ready for merge to main
 EOF
-)"
+)"`
 ```
 
 #### 5.3 Report Final Status
@@ -338,7 +352,7 @@ Total time: 4h 23m
 [Next Steps]
   1. Review individual PRs with team
   2. Address any review feedback
-  3. Merge PRs to master when approved
+  3. Merge PRs to main when approved
   4. Close milestone in GitHub
 ```
 
@@ -539,8 +553,8 @@ Attempt 3: [Expanded approach, outcome]
 ### Branch Creation
 Create a separate feature branch for EACH task:
 ```bash
-git checkout master
-git pull origin master
+git checkout main
+git pull origin main
 git checkout -b feature/task-$TASK_ID
 ```
 
@@ -571,7 +585,7 @@ Don't wait until task is complete.
 Create PR immediately after task completion:
 ```bash
 git push -u origin feature/task-$TASK_ID
-gh pr create --base master --title "[TASK-$ID] $TITLE"
+gh pr create --base main --title "[TASK-$ID] $TITLE"
 ```
 
 ### Issue Update Strategy
@@ -586,7 +600,7 @@ gh issue close $ISSUE_NUMBER --comment "Implemented in #PR_NUMBER"
 Delete duplicate branches and recreate:
 ```bash
 git branch -D feature/task-$TASK_ID
-git checkout master
+git checkout main
 git checkout -b feature/task-$TASK_ID
 ```
 
@@ -601,16 +615,18 @@ If PR exists, update it instead of creating new one:
 gh pr edit $PR_NUMBER --body "Updated description"
 ```
 
-### "Merge conflicts"
+### "Resolve conflicts"
 Resolve conflicts before creating PR:
 ```bash
-git checkout master
-git pull origin master
+git checkout main
+git pull origin main
 git checkout feature/task-$TASK_ID
-git rebase master
+git rebase main
 # Resolve conflicts
 git push origin feature/task-$TASK_ID
 ```
+
+
 
 ### "Issue not closing"
 Manually close issue with correct PR reference:

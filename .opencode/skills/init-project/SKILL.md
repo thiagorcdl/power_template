@@ -119,6 +119,12 @@ gh repo create $REPO_NAME \
   --topics "$TOPICS"
 ```
 
+#### 3.4 Set Up Gemini Code Assist
+Before proceeding with development:
+1. Install Gemini Code Assist from https://github.com/apps/gemini-code-assist
+2. Select the newly created repository
+3. Grant necessary permissions for code reviews
+
 #### 3.4 Create GitHub Issues
 Parse execution plan and create issues:
 - One issue per task
@@ -153,7 +159,7 @@ git commit -m "chore: initialize project with [project-name]
 
 #### 4.3 Push to Remote
 ```bash
-git push -u origin master
+git push -u origin main
 ```
 
 ## Usage

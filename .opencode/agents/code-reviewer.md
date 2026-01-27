@@ -1,11 +1,11 @@
-# Code Reviewer Agent (Bugbot)
+# Code Reviewer Agent (Gemini Code Assist)
 
 ## Purpose
-Reviews pull requests targeting the master branch to ensure code quality and catch potential issues before production deployment.
+Reviews pull requests targeting the main branch using the official Gemini Code Assist GitHub app to ensure code quality and catch potential issues before production deployment.
 
 ## Model Configuration
-- **Provider**: Bugbot (Cursor integration - external service)
-- **Trigger**: PR opened/updated to master branch via GitHub App
+- **Provider**: Gemini Code Assist (Google's official GitHub App)
+- **Trigger**: PR comment with "/gemini review" command
 
 ## Responsibilities
 - Review PR changes thoroughly
@@ -17,22 +17,44 @@ Reviews pull requests targeting the master branch to ensure code quality and cat
 - Check documentation updates
 
 ## When Used
-- When PR is opened from `development` to `master`
-- When PR targeting `master` is updated
-- When explicitly triggered via comment
+- When PR is opened from feature branches to `main`
+- When explicitly triggered via comment "/gemini review"
+- After any PR updates (new commits pushed)
 
 ## Trigger Mechanism
 
 ### Automatic Trigger
-Bugbot is configured as a GitHub App and automatically triggers when:
-- PR is opened targeting `master`
-- PR is updated (new commits pushed) targeting `master`
-- PR is marked ready for review targeting `master`
+The code review is triggered by commenting "/gemini review" on the PR.
 
 ### Manual Trigger
-Developers can manually trigger Bugbot by commenting on the PR:
-- `@bugbot run`
-- `/bugbot review`
+Developers can manually trigger Gemini Code Assist by commenting on the PR:
+- `/gemini review`
+
+## Setup Requirements
+
+### 1. Repository Setup
+The GitHub repository must exist before configuring Gemini Code Assist:
+1. Create the repository on GitHub
+2. Initialize the repository locally
+3. Configure the repository structure
+
+### 2. Gemini Code Assist Configuration
+1. Visit https://github.com/apps/gemini-code-assist
+2. Install the Gemini Code Assist app to your GitHub organization or personal account
+3. Select the repository you want to use it with
+4. Grant necessary permissions:
+   - Read pull requests
+   - Create pull request reviews
+   - Post comments on pull requests
+
+### 3. Agent Configuration
+```yaml
+agent: code_reviewer
+provider: gemini_code_assist
+role: [pr_review]
+trigger: pr_comment
+enabled: true
+```
 
 ## Review Process
 
@@ -76,7 +98,7 @@ Developers can manually trigger Bugbot by commenting on the PR:
 
 ## Output Format
 
-Bugbot provides review comments directly on the PR, typically including:
+Gemini Code Assist provides review comments directly on the PR, typically including:
 
 ### Summary
 - High-level assessment of the PR
@@ -102,57 +124,32 @@ For each issue found:
 - Decisions that need explanation
 - Potential edge cases to consider
 
-## Configuration
-
-### Setting Up Bugbot in GitHub
-
-1. Visit https://cursor.com/bugbot
-2. Sign in with your Cursor account
-3. Click "Get Bugbot" or "Install Bugbot"
-4. Select your GitHub repositories
-5. Grant Bugbot necessary permissions:
-   - Read pull requests
-   - Create pull request reviews
-   - Post comments on pull requests
-6. Configure Bugbot to run automatically on PRs to `master` branch
-
-### Agent Configuration
-```yaml
-agent: code_reviewer
-provider: bugbot
-role: [pr_review]
-trigger: pr_to_master
-enabled: true
-```
-
-## Environment Variables
-No additional environment variables required. Bugbot is configured via GitHub App integration.
-
 ## Integration with Other Agents
 
 ### Interaction with Reviewer Agent (Gemini)
-- **Reviewer Agent** (Gemini): Reviews during pre-push on feature branches AND via GitHub Actions when merging to `development`
-- **Code Reviewer Agent** (Bugbot): Reviews PRs from `development` to `master`
+- **Code Quality Checks**: Local linting and testing during development
+- **Code Reviewer Agent** (Gemini Code Assist): Reviews PRs from feature branches to `main` via manual comment trigger
 
 This provides defense-in-depth:
 1. Feature branch: Local Gemini review with auto-fix (pre-push hook)
 2. Development PR: Remote Gemini review via GitHub Actions
-3. Master PR: Bugbot independent review via Cursor integration
+3. Main PR: Gemini Code Assist review via manual comment trigger
 4. Each layer catches different types of issues
 
 ### Interaction with Builder Agent
-- Builder Agent should address Bugbot's feedback
+- Builder Agent should address Gemini Code Assist's feedback
 - Builder Agent can fix issues and push updates
-- Bugbot will review updates automatically
+- Updated PR can be re-triggered for additional review
 
-## Best Practices for Responding to Bugbot
+## Best Practices for Responding to Gemini Code Assist
 
-### When Bugbot Raises Issues
+### When Gemini Code Assist Raises Issues
 1. **Acknowledge**: Reply to each comment with your plan
 2. **Fix**: Address the issue in code
 3. **Verify**: Ensure fix resolves the concern
 4. **Reply**: Comment back explaining the fix
-5. **Update PR**: Push fixes to `development` branch to update the PR
+5. **Update PR**: Push fixes to feature branch to update the PR
+6. **Re-trigger**: Comment "/gemini review" for updated review
 
 ### When You Disagree
 1. **Explain**: Provide reasoning why you disagree
@@ -169,85 +166,75 @@ This provides defense-in-depth:
 
 ## Triggering Re-review
 
-### Automatic Re-review
-Bugbot automatically reviews when:
-- New commits are pushed to `development` (PR updates automatically)
-- PR is updated
-
 ### Manual Re-review
 Comment on the PR:
 ```
-@bugbot run
-```
-
-or
-
-```
-/bugbot review
+/gemini review
 ```
 
 ## Review Timeline
 
 ### Initial Review
-- Triggered: When PR opens to master
-- Completes: Usually within 1-10 minutes
+- Triggered: When "/gemini review" is commented
+- Completes: Usually within 5-15 minutes
 - Output: Review comments posted on PR
 
 ### Follow-up Review
-- Triggered: When new commits pushed to `development`
-- Completes: Usually within 1-10 minutes
+- Triggered: When "/gemini review" is commented again after updates
+- Completes: Usually within 5-15 minutes
 - Output: New review comments or updates
 
-## Merging Workflow (Development to Master)
+## Merging Workflow (Feature Branch to Main)
 
-1. Create PR from `development` to `master`
-2. Wait for Bugbot review (up to 10 minutes)
-3. **If issues are found**:
-   - Fix issues in `development` branch
-   - Push fixes to `development`
+1. Create PR from feature branch to `main`
+2. Comment "/gemini review" on the PR
+3. Wait for Gemini Code Assist review (up to 15 minutes)
+4. **If issues are found**:
+   - Fix issues in feature branch
+   - Push fixes to feature branch
    - PR updates automatically
-   - Bugbot reviews updated PR
-   - No need to re-trigger manually
-4. **If Bugbot fails** (usage limits, errors, unresponsive):
-   - After 10 minutes, assistant may proceed with merge if review cannot be obtained
-5. Merge PR to `master`
+   - Comment "/gemini review" again for updated review
+   - No need to manually re-trigger (just use the comment)
+5. **If Gemini Code Assist fails** (usage limits, errors, unresponsive):
+   - After 15 minutes, assistant may proceed with merge if review cannot be obtained
+6. Merge PR to `main`
 
 ## Blocking Behavior
 
-- Bugbot provides feedback but does NOT enforce blocking
-- Maintainers should consider Bugbot's feedback seriously
+- Gemini Code Assist provides feedback but does NOT enforce blocking
+- Maintainers should consider Gemini Code Assist's feedback seriously
 - Critical issues should be addressed before merge
 - The template relies on developer discipline to review and address findings
 
 ## Related Skills
-No direct skill integration. Bugbot runs automatically via GitHub App.
+No direct skill integration. Gemini Code Assist runs via GitHub App when manually triggered.
 
 ## Related Agents
-- **Reviewer Agent** (Gemini): Pre-push reviews and development PR reviews
-- **Builder Agent**: Fixes issues identified by Bugbot
-- **Planner Agent**: Creates designs that Bugbot reviews
+- **Builder Agent**: Implements fixes based on review feedback
+- **Builder Agent**: Fixes issues identified by Gemini Code Assist
+- **Planner Agent**: Creates designs that Gemini Code Assist reviews
 
 ## Configuration Checklist
 
 When setting up a new repository:
 
-1. ✅ Install Bugbot from https://cursor.com/bugbot
-2. ✅ Grant Bugbot permissions to your GitHub repository
-3. ✅ Configure Bugbot to run on PRs to `master`
-4. ✅ Test by opening a PR from `development` to `master`
-5. ✅ Verify Bugbot reviews are posting correctly
+1. ✅ Create GitHub repository
+2. ✅ Install Gemini Code Assist from https://github.com/apps/gemini-code-assist
+3. ✅ Grant Gemini Code Assist permissions to your GitHub repository
+4. ✅ Test by opening a PR from a feature branch to `main`
+5. ✅ Comment "/gemini review" and verify reviews are posting correctly
 
 ## Troubleshooting
 
-### Bugbot Not Triggering
-- Verify Bugbot is installed for the repository
+### Gemini Code Assist Not Triggering
+- Verify Gemini Code Assist is installed for the repository
 - Check GitHub App permissions in repository settings
-- Verify PR is targeting `master` branch
-- Check if Bugbot service is operational
+- Verify the comment is exactly "/gemini review"
+- Check if Gemini Code Assist service is operational
 
-### Bugbot Review is Incomplete
-- Check if PR is very large (Bugbot may timeout)
-- Trigger re-review manually with `@bugbot run`
+### Gemini Code Assist Review is Incomplete
+- Check if PR is very large (may timeout)
+- Trigger re-review manually with "/gemini review"
 - Split large PR into smaller pieces
 
 ### False Positives
@@ -255,3 +242,9 @@ When setting up a new repository:
 - Explain why the finding doesn't apply
 - Consider improving code to avoid confusion
 - Update documentation if needed
+
+## Documentation Reference
+
+For more information about Gemini Code Assist, see:
+- Official GitHub App: https://github.com/apps/gemini-code-assist
+- Documentation: https://developers.google.com/gemini-code-assist/docs/review-github-code

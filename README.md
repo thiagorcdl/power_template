@@ -4,11 +4,11 @@ A framework-agnostic AI-assisted software development template that uses:
 
 - **opencode** as the AI assistant framework
 - **OpenRouter** with **GLM-4.7** (primary) and **Gemini2.0** (fallback) for planning and building
-- **Gemini** for web searching and code reviews
-- **Bugbot** for PR reviews targeting `master` branch
+- **Gemini** for web searching and documentation
+- **Gemini Code Assist** for PR reviews targeting `main` branch
 - Domain-specific agents for specialized tasks
 - Git hooks for automated quality checks
-- **GitFlow branching**: `master` (production), `development` (staging), `feature/*` (work)
+- **Branching**: `main` (production), `feature/*` (work)
 
 This repo is meant to be used as a **GitHub Template Repository**.
 
@@ -16,12 +16,11 @@ This repo is meant to be used as a **GitHub Template Repository**.
 
 ## What This Template Enforces
 
-- **GitFlow branching model** with `master`, `development`, and `feature/*` branches
+- **Branching model** with `main` and `feature/*` branches
 - **Commit-time linting** (pre-commit hook runs `./scripts/lint.sh`)
-- **Push-time tests + review** on feature branches (pre-push runs `./scripts/test.sh` and automated review with auto-fix)
+- **Push-time tests** on feature branches (pre-push runs `./scripts/test.sh`)
 - **CI parity**: GitHub Actions runs `./scripts/check.sh`
-- **Gemini review** on merge to `development` (via GitHub Actions)
-- **Bugbot review** on merge to `master` (via Cursor integration)
+- **Gemini Code Assist review** on PRs to `main` (via GitHub App)
 - **Stack detection**: Automatically detects languages/frameworks and configures lint/test accordingly
 
 **Important**: `scripts/lint.sh` and `scripts/test.sh` are **dynamic** based on detected stack. The template automatically configures appropriate commands for your chosen stack.
@@ -72,24 +71,9 @@ export GITHUB_TOKEN="your-github-token-here"
 
 Before initializing your project, you need to configure the automated code reviewers.
 
-#### Configure Cursor's Bugbot
+#### Configure Google's Gemini Code Assist
 
-1. Go to https://cursor.com/bugbot
-2. Sign in with your Cursor account
-3. Click "Get Bugbot" or "Install Bugbot"
-4. Select your GitHub repositories where you want to use Bugbot
-5. Grant Bugbot the necessary permissions:
-   - Read pull requests
-   - Create pull request reviews
-   - Post comments on pull requests
-6. Configure Bugbot settings:
-   - Set to run on all PRs to `master` branch
-   - Enable automatic triggering on PR creation/update
-7. Test the installation by opening a PR to `master` (Bugbot should review it)
-
-#### Configure Google's Gemini Code Reviewer
-
-1. Go to GitHub Marketplace: https://github.com/marketplace/actions/gemini-ai-code-reviewer
+1. Go to: https://github.com/apps/gemini-code-assist
 2. Click "Use latest version"
 3. Select your GitHub repository
 4. Add the required GitHub Action secrets:
@@ -97,16 +81,12 @@ Before initializing your project, you need to configure the automated code revie
    gh secret set GEMINI_API_KEY -b "your-gemini-api-key"
    ```
 5. The workflow `.github/workflows/gemini-review.yml` will be added automatically
-6. Configure the workflow to trigger on PRs targeting `development` branch:
+6. Configure the workflow to trigger on PRs (legacy development branch setup):
    ```yaml
    on:
      pull_request:
        branches: [development]
    ```
-
-**Note**: If you prefer using a different Gemini code reviewer, check the GitHub Marketplace for options like:
-- `gemini-ai-code-reviewer` (truongnh1992)
-- `code-review-by-gemini-ai`
 
 ### 4. Create a New Project
 
@@ -168,9 +148,7 @@ The template uses specialized agents for different tasks:
 |--------|---------|-------|
 | **Planner** | Creates technical designs and execution plans | GLM-4.7 (fallback: Gemini2.0) |
 | **Builder** | Implements features, writes tests, fixes issues | GLM-4.7 (fallback: Gemini2.0) |
-| **Reviewer** | Reviews code changes, identifies issues | Gemini 2.0 Flash |
 | **Web Searcher** | Finds documentation, examples, best practices | Gemini 2.0 Flash |
-| **Code Reviewer** | Reviews PRs to master | Bugbot |
 
 ### Available Skills
 
@@ -188,23 +166,22 @@ The template uses specialized agents for different tasks:
 
 ### GitFlow Branching Workflow
 
-This template uses a GitFlow branching model:
+This template uses a simplified branching model:
 
 | Branch | Purpose | Review Triggered |
 |--------|---------|------------------|
-| `master` | Production-ready code | Bugbot (via Cursor) |
-| `development` | Integration/staging branch | Gemini (via GitHub Actions) |
+| `main` | Production-ready code | Gemini Code Assist (via GitHub App) |
 | `feature/*` | Feature development branches | None (pre-push hook) |
 
 ### Creating a Feature Branch
 
 ```bash
-git checkout development
-git pull origin development
+git checkout main
+git pull origin main
 git checkout -b feature/my-change
 ```
 
-**Note**: Always branch from `development`, not `master`.
+**Note**: Always branch from `main`.
 
 ### Implementing Changes
 
@@ -237,54 +214,29 @@ git push -u origin feature/my-change
 
 The pre-push hook will:
 1. Run tests
-2. Get diff from development
-3. Request review from Reviewer agent (Gemini)
-4. **Automatically fix findings** using Builder agent
-5. Commit fixes to the same commit (amend)
-6. Block push if P0 issues remain (unless `ALLOW_P0=1`)
+2. Run linting
+3. Ensure code quality standards
 
-**Override P0 blocking** (if needed):
-```bash
-ALLOW_P0=1 git push
-```
+**Note**: Code reviews are handled via Gemini Code Assist GitHub app after PR creation.
 
-### Merging Feature to Development
+### Creating Pull Requests
 
 ```bash
-gh pr create --base development --title "My feature" --body "Description"
+gh pr create --base main --title "My feature" --body "Description"
 ```
 
-**Workflow when merging to `development`**:
-1. Create PR from feature branch to `development`
-2. Wait for **Gemini code review** (GitHub Action triggers automatically)
-3. Review will complete within 10 minutes
+**Workflow for PRs to `main`**:
+1. Create PR from feature branch to `main`
+2. Comment `/gemini review` on the PR to trigger Gemini Code Assist review
+3. Review will complete within 5-15 minutes
 4. **If issues are found**:
-   - Fix the issues locally
-   - Push fixes to the same branch
-   - Gemini will review the updated PR automatically
-   - No need to re-trigger Gemini manually
-5. **If Gemini fails** (usage limits, errors, unresponsive):
-   - The assistant may merge after 10 minutes if no review is received
-6. Merge the PR to `development`
-
-### Merging Development to Master
-
-```bash
-gh pr create --base master --head development --title "Release vX.X.X" --body "Release notes"
-```
-
-**Workflow when merging to `master`**:
-1. Create PR from `development` to `master`
-2. Wait for **Bugbot review** (Cursor integration triggers automatically)
-3. Review will complete within 10 minutes
-4. **If issues are found**:
-   - Fix the issues in the `development` branch
-   - Push fixes to `development`
-   - The PR will update automatically
-   - Bugbot will review the updated PR
-5. **If Bugbot fails** (usage limits, errors, unresponsive):
-   - The assistant may merge after 10 minutes if no review is received
-6. Merge the PR to `master`
+   - Use `/skill fix-review-issues` to automatically fix Security, Critical, High, and Medium priority issues
+   - Low priority issues will be automatically converted to GitHub issues
+   - Push fixes to update the PR
+   - Comment `/gemini review` again for updated review
+5. **If Gemini Code Assist fails** (usage limits, errors, unresponsive):
+   - Address critical issues manually before merging
+6. Merge the PR to `main` once all critical issues are resolved
 
 ---
 
@@ -333,10 +285,10 @@ power_template/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                    # CI pipeline
-│       └── gemini-review.yml         # Gemini review on PR to development
+│       └── gemini-review.yml         # Gemini review on PR to development (legacy)
 ├── .githooks/
 │   ├── pre-commit                    # Lint on commit
-│   └── pre-push                     # Test + review on push
+│   └── pre-push                     # Test on push
 ├── .git/
 │   └── opencode                    # opencode configuration
 ├── .opencode/
@@ -371,9 +323,8 @@ power_template/
 
 | Variable | Purpose | Default |
 |----------|---------|----------|
-| `ALLOW_P0` | Override P0 blocking on push | `0` |
 | `BOOTSTRAP` | Skip hooks during initial setup | `0` |
-| `BASE_BRANCH` | Base branch for diffing | `development` |
+| `BASE_BRANCH` | Base branch for diffing | `main` |
 
 ---
 
@@ -414,33 +365,29 @@ Patterns for detecting languages and frameworks.
 
 ### Pre-Push
 - Runs `./scripts/test.sh`
-- Gets diff from base branch
-- Requests review from Reviewer agent (Gemini)
-- **Automatically fixes findings** using Builder agent
-- Amends commit with fixes
-- Blocks push if P0 issues remain (unless overridden)
+- Ensures code quality before pushing
+- No automatic review or auto-fix during pre-push
 
 ---
 
 ## Code Quality Workflow
 
-### 1. Two-Model System
+### 1. Simplified Review Process
 - **Builder Agent** (GLM-4.5 Air): Writes code and implements features
-- **Reviewer Agent** (Gemini): Reviews code during pre-push and via GitHub Actions
-- **Code Reviewer Agent** (Bugbot): Reviews PRs from development to master
+- **Gemini Code Assist**: Reviews PRs via GitHub App when triggered with "/gemini review"
 
-### 2. Auto-Fix on Push
-Review findings are automatically fixed:
-- P0, P1, P2 findings are all addressed
-- Fixes are applied to the same commit (amend)
-- No separate fix commit is created
-- Push only blocks if P0 issues can't be fixed
+### 2. Targeted Auto-Fix
+Review findings are selectively fixed:
+- Security, Critical, High, and Medium priority issues are automatically fixed
+- Low priority issues are converted to GitHub issues
+- Fixes are applied and PR is updated
+- Review is re-triggered for verification
 
-### 3. Defense in Depth
-- Feature branch: Local Gemini review with auto-fix during pre-push
-- PR to development: Remote Gemini review via GitHub Actions
-- PR to master: Bugbot review for final production check
+### 3. Clean Workflow
+- Feature branch: Local development with linting and testing
+- PR to main: Gemini Code Assist review on demand
 - CI: Runs all checks in parallel
+- Issues tracked in GitHub for low priority items
 
 ---
 

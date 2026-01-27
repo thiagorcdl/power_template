@@ -62,7 +62,7 @@ setup_template() {
         print_info "Template directory already exists, updating..."
         cd "$TEMPLATE_DIR"
         git fetch origin
-        git reset --hard origin/master
+        git reset --hard origin/main
     else
         print_info "Cloning original template repository..."
         git clone "$ORIGINAL_REPO" "$TEMPLATE_DIR"
