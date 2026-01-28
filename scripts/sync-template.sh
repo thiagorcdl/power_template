@@ -26,6 +26,7 @@ AGENT_FILES=(
     "agents/planner.md"
     "agents/reviewer.md"
     "agents/web-searcher.md"
+    "agents/code-reviewer.md"
 )
 
 SKILL_FILES=(
@@ -45,9 +46,7 @@ DOCUMENTATION_FILES=(
     "README.md"
 )
 
-WORKFLOW_FILES=(
-    ".github/workflows/gemini-review.yml"
-)
+WORKFLOW_FILES=()
 
 SCRIPT_FILES=(
     "scripts/sync-template.sh"
