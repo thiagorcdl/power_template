@@ -222,8 +222,8 @@ commit_changes() {
     fi
 
     # Check documentation files
-    if ! git diff --quiet AGENTS.md README.md || ! git diff --cached --quiet AGENTS.md README.md; then
-        files_to_add+=("AGENTS.md README.md")
+    if ! git diff --quiet AGENTS.md || ! git diff --cached --quiet AGENTS.md; then
+        files_to_add+=("AGENTS.md")
     fi
 
     # Check workflow files
