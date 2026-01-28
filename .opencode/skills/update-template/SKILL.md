@@ -161,7 +161,7 @@ Error: scripts/sync-template.sh not found
 This project may not have been created from the power_template repository.
 
 To manually add the script, copy it from:
-https://github.com/thiagorcdl/power_template/blob/master/scripts/sync-template.sh
+https://github.com/thiagorcdl/power_template/blob/main/scripts/sync-template.sh
 ```
 
 ### Invalid Project
