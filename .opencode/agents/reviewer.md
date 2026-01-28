@@ -40,9 +40,8 @@ This document outlines the code quality standards and practices for the project.
 ### Using Gemini Code Assist
 1. Create a pull request from your feature branch to `main`
 2. Comment `/gemini review` on the PR to trigger the review
-3. Address any feedback provided by Gemini Code Assist
-4. Comment `/gemini review` again for updated review after fixes
-5. Merge the PR once all critical issues are resolved
+3. Address all feedback provided by Gemini Code Assist
+4. Merge the PR once all critical, high priority and medium priority issues are resolved
 
 ### Review Criteria
 Gemini Code Assist will review for:
@@ -115,10 +114,11 @@ Include:
 
 ### PR Process
 1. Create PR from feature branch to `main`
-2. Add `/gemini review` comment
+2. Add one and only one `/gemini review` comment
 3. Wait for review feedback
 4. Address feedback and update PR
-5. Request final review and merge
+5. Merge into `main`
+6. If and only if merge was successful, delete feature branch
 
 ## Quality Assurance
 
@@ -161,5 +161,5 @@ Include:
 ### Getting Help
 - For technical questions, consult project documentation
 - For architectural decisions, review existing patterns
-- For complex issues, consider pairing with another developer
+- For complex issues, break the problem into smaller tasks and track them in github issues
 - For urgent problems, escalate to project maintainers

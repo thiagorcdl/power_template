@@ -193,14 +193,12 @@ Comment on the PR:
    - Fix issues in feature branch
    - Push fixes to feature branch
    - PR updates automatically
-   - Comment "/gemini review" again for updated review
-   - No need to manually re-trigger (just use the comment)
+   - No need to re-trigger review
 5. **If Gemini Code Assist fails** (usage limits, errors, unresponsive):
    - After 15 minutes, assistant may proceed with merge if review cannot be obtained
 6. Merge PR to `main`
 
 ## Blocking Behavior
-
 - Gemini Code Assist provides feedback but does NOT enforce blocking
 - Maintainers should consider Gemini Code Assist's feedback seriously
 - Critical issues should be addressed before merge
