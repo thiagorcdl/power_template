@@ -52,8 +52,8 @@ Actually, the script is interactive, so just run:
 ```
 
 The script will:
-1. Clone/update the original template repository
-2. Compare agent files (builder, planner, reviewer, web-searcher, code-reviewer)
+1. Clone/update`` original template repository
+2. Compare agent files (builder, planner, reviewer, web-searcher)
 3. Compare skill files (execute-plan, init-project, fix-review-issues, update-stack-config, detect-stack)
 4. Compare config files (opencode/default-config.json)
 5. Compare documentation files (AGENTS.md, README.md)
@@ -210,7 +210,6 @@ The following files are synced from the template:
 - `.opencode/agents/planner.md`
 - `.opencode/agents/reviewer.md`
 - `.opencode/agents/web-searcher.md`
-- `.opencode/agents/code-reviewer.md`
 
 ### Skill Files
 - `.opencode/skills/execute-plan/SKILL.md`

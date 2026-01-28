@@ -26,7 +26,6 @@ AGENT_FILES=(
     "agents/planner.md"
     "agents/reviewer.md"
     "agents/web-searcher.md"
-    "agents/code-reviewer.md"
 )
 
 SKILL_FILES=(

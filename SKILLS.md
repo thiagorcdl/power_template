@@ -382,7 +382,7 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
    - Execute `./scripts/sync-template.sh`
    - The script will:
      - Clone/update the original template repository
-     - Compare agent files (builder, planner, reviewer, web-searcher, code-reviewer)
+     - Compare agent files (builder, planner, reviewer, web-searcher)
      - Compare skill files (execute-plan, init-project, fix-review-issues, update-stack-config, detect-stack)
      - Show differences between current project and original template
      - Prompt for confirmation before applying changes
@@ -407,7 +407,6 @@ Skills are reusable workflows that leverage domain-specific agents to accomplish
 - `.opencode/agents/planner.md`
 - `.opencode/agents/reviewer.md`
 - `.opencode/agents/web-searcher.md`
-- `.opencode/agents/code-reviewer.md`
 - `.opencode/skills/execute-plan/SKILL.md`
 - `.opencode/skills/init-project/SKILL.md`
 - `.opencode/skills/fix-review-issues/SKILL.md`
